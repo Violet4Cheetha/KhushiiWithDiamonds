@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { supabase, JewelryItem, Category } from '../lib/supabase';
+import { supabase, JewelryItem, Category, isSupabaseConfigured } from '../lib/supabase';
 import { AdminLogin } from '../components/AdminLogin';
-import { Plus, Edit, Trash2, Save, X, LogOut, Shield, Folder, Package, Settings, Image, Diamond } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, LogOut, Shield, Folder, Package, Settings, Image, Diamond, AlertCircle } from 'lucide-react';
 import { formatCurrency, calculateJewelryPriceSync } from '../lib/goldPrice';
 import { useGoldPrice } from '../hooks/useGoldPrice';
 import { useAdminSettings } from '../hooks/useAdminSettings';
@@ -17,6 +17,7 @@ export function AdminPage() {
   const [showSettingsForm, setShowSettingsForm] = useState(false);
   const [editingItem, setEditingItem] = useState<JewelryItem | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [error, setError] = useState<string | null>(null);
   
   const { goldPrice } = useGoldPrice();
   const { fallbackGoldPrice, gstRate, updateSetting } = useAdminSettings();
@@ -53,10 +54,18 @@ export function AdminPage() {
 
   const checkAuthStatus = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      if (!isSupabaseConfigured()) {
+        setError('Database not configured - Admin panel unavailable');
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
+
+      const { data: { session } } = await supabase!.auth.getSession();
       setIsAuthenticated(!!session);
     } catch (error) {
       console.error('Error checking auth status:', error);
+      setError('Authentication check failed');
       setIsAuthenticated(false);
     } finally {
       setLoading(false);
@@ -65,7 +74,9 @@ export function AdminPage() {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      if (supabase) {
+        await supabase.auth.signOut();
+      }
       setIsAuthenticated(false);
       setItems([]);
       setCategories([]);
@@ -75,16 +86,22 @@ export function AdminPage() {
   };
 
   const loadData = async () => {
+    if (!isSupabaseConfigured()) {
+      setError('Database not configured');
+      return;
+    }
+
     try {
       const [itemsResponse, categoriesResponse] = await Promise.all([
-        supabase.from('jewelry_items').select('*').order('created_at', { ascending: false }),
-        supabase.from('categories').select('*').order('name')
+        supabase!.from('jewelry_items').select('*').order('created_at', { ascending: false }),
+        supabase!.from('categories').select('*').order('name')
       ]);
 
       if (itemsResponse.data) setItems(itemsResponse.data);
       if (categoriesResponse.data) setCategories(categoriesResponse.data);
     } catch (error) {
       console.error('Error loading data:', error);
+      setError('Failed to load admin data');
     }
   };
 
@@ -136,13 +153,13 @@ export function AdminPage() {
 
     try {
       if (editingItem) {
-        const { error } = await supabase
+        const { error } = await supabase!
           .from('jewelry_items')
           .update({ ...itemData, updated_at: new Date().toISOString() })
           .eq('id', editingItem.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('jewelry_items').insert([itemData]);
+        const { error } = await supabase!.from('jewelry_items').insert([itemData]);
         if (error) throw error;
       }
       
@@ -159,13 +176,13 @@ export function AdminPage() {
     
     try {
       if (editingCategory) {
-        const { error } = await supabase
+        const { error } = await supabase!
           .from('categories')
           .update(categoryFormData)
           .eq('id', editingCategory.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('categories').insert([categoryFormData]);
+        const { error } = await supabase!.from('categories').insert([categoryFormData]);
         if (error) throw error;
       }
       
@@ -202,7 +219,7 @@ export function AdminPage() {
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this item?')) {
       try {
-        const { error } = await supabase.from('jewelry_items').delete().eq('id', id);
+        const { error } = await supabase!.from('jewelry_items').delete().eq('id', id);
         if (error) throw error;
         await loadData();
       } catch (error) {
@@ -213,7 +230,7 @@ export function AdminPage() {
   };
 
   const handleDeleteCategory = async (id: string, categoryName: string) => {
-    const { count } = await supabase
+    const { count } = await supabase!
       .from('jewelry_items')
       .select('*', { count: 'exact', head: true })
       .eq('category', categoryName);
@@ -225,7 +242,7 @@ export function AdminPage() {
 
     if (confirm(`Are you sure you want to delete the category "${categoryName}"?`)) {
       try {
-        const { error } = await supabase.from('categories').delete().eq('id', id);
+        const { error } = await supabase!.from('categories').delete().eq('id', id);
         if (error) throw error;
         await loadData();
       } catch (error) {
@@ -254,12 +271,47 @@ export function AdminPage() {
     );
   }
 
+  if (error && !isSupabaseConfigured()) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+          <div className="flex items-center justify-center mb-6">
+            <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-3 rounded-lg">
+              <Diamond className="h-12 w-12 text-white" />
+            </div>
+          </div>
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Admin Panel Unavailable</h2>
+          <p className="text-gray-600 mb-6">
+            The database connection is not configured. Please set up your Supabase environment variables to access the admin panel.
+          </p>
+          <div className="bg-gray-50 rounded-lg p-4 text-left">
+            <h3 className="font-semibold text-gray-900 mb-2">Required Environment Variables:</h3>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>• VITE_SUPABASE_URL</li>
+              <li>• VITE_SUPABASE_ANON_KEY</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return <AdminLogin onLoginSuccess={() => setIsAuthenticated(true)} />;
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {error && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center">
+            <AlertCircle className="h-5 w-5 text-yellow-600 mr-2" />
+            <p className="text-yellow-800 text-sm">{error}</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center space-x-4">
           <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-2 rounded-lg">

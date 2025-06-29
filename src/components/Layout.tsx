@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronDown, Diamond } from 'lucide-react';
-import { supabase, Category } from '../lib/supabase';
+import { Menu, X, ChevronDown, Diamond, AlertCircle } from 'lucide-react';
+import { supabase, Category, isSupabaseConfigured } from '../lib/supabase';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,19 +11,30 @@ export function Layout({ children }: LayoutProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const location = useLocation();
 
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const { data } = await supabase
+        if (!isSupabaseConfigured()) {
+          setError('Database not configured');
+          return;
+        }
+
+        const { data, error: fetchError } = await supabase!
           .from('categories')
           .select('*')
           .order('name');
         
+        if (fetchError) {
+          throw fetchError;
+        }
+        
         if (data) setCategories(data);
       } catch (error) {
         console.error('Error loading categories:', error);
+        setError('Failed to load categories');
       }
     };
 
@@ -77,17 +88,23 @@ export function Layout({ children }: LayoutProps) {
                 {isCategoryDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
                     <div className="py-1">
-                      {categories.map((category) => (
-                        <Link
-                          key={category.id}
-                          to={`/category/${category.name}`}
-                          onClick={() => setIsCategoryDropdownOpen(false)}
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition-colors"
-                        >
-                          {category.name}
-                        </Link>
-                      ))}
-                      {categories.length === 0 && (
+                      {error ? (
+                        <div className="px-4 py-2 text-sm text-red-600 flex items-center">
+                          <AlertCircle className="h-4 w-4 mr-2" />
+                          Categories unavailable
+                        </div>
+                      ) : categories.length > 0 ? (
+                        categories.map((category) => (
+                          <Link
+                            key={category.id}
+                            to={`/category/${category.name}`}
+                            onClick={() => setIsCategoryDropdownOpen(false)}
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition-colors"
+                          >
+                            {category.name}
+                          </Link>
+                        ))
+                      ) : (
                         <div className="px-4 py-2 text-sm text-gray-500">
                           No categories available
                         </div>
@@ -128,16 +145,27 @@ export function Layout({ children }: LayoutProps) {
               <div className="px-3 py-2">
                 <div className="text-base font-medium text-gray-900 mb-2">Categories</div>
                 <div className="space-y-1 pl-4">
-                  {categories.map((category) => (
-                    <Link
-                      key={category.id}
-                      to={`/category/${category.name}`}
-                      onClick={() => setIsMenuOpen(false)}
-                      className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:text-yellow-600 hover:bg-gray-100 transition-colors"
-                    >
-                      {category.name}
-                    </Link>
-                  ))}
+                  {error ? (
+                    <div className="px-3 py-2 text-sm text-red-600 flex items-center">
+                      <AlertCircle className="h-4 w-4 mr-2" />
+                      Categories unavailable
+                    </div>
+                  ) : categories.length > 0 ? (
+                    categories.map((category) => (
+                      <Link
+                        key={category.id}
+                        to={`/category/${category.name}`}
+                        onClick={() => setIsMenuOpen(false)}
+                        className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:text-yellow-600 hover:bg-gray-100 transition-colors"
+                      >
+                        {category.name}
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="px-3 py-2 text-sm text-gray-500">
+                      No categories available
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
