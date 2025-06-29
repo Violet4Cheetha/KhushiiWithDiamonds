@@ -43,7 +43,7 @@ export function Layout({ children }: LayoutProps) {
             <Link to="/" className="flex items-center space-x-2">
               <Crown className="h-8 w-8 text-yellow-600" />
               <div>
-                <span className="text-2xl font-bold text-gray-900">LuxeJewels</span>
+                <span className="text-2xl font-bold text-gray-900">KhushiiWithDiamond</span>
                 <div className="text-xs text-gray-600">Premium Indian Jewelry</div>
               </div>
             </Link>
@@ -160,7 +160,7 @@ export function Layout({ children }: LayoutProps) {
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center space-x-2 mb-4">
                 <Crown className="h-6 w-6 text-yellow-400" />
-                <span className="text-lg font-semibold">LuxeJewels</span>
+                <span className="text-lg font-semibold">KhushiiWithDiamond</span>
               </div>
               <p className="text-gray-400 mb-4">
                 Premium Indian jewelry with live gold pricing.
@@ -170,13 +170,13 @@ export function Layout({ children }: LayoutProps) {
             <div>
               <h3 className="text-lg font-semibold mb-4">Contact</h3>
               <ul className="space-y-2 text-gray-400">
-                <li>support@luxejewels.in</li>
+                <li>support@khushiiwithdiamond.in</li>
               </ul>
             </div>
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 LuxeJewels. All rights reserved.</p>
+            <p>&copy; 2025 KhushiiWithDiamond. All rights reserved.</p>
           </div>
         </div>
       </footer>
