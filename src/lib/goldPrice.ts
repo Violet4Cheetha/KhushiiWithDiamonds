@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 
-const GOLD_API_URL = 'https://api.metalpriceapi.com/v1/latest?api_key=9886e90c5c52f1a75a3ca50daccd91d4&base=INR&currencies=XAU';
+const GOLD_API_KEY = import.meta.env.VITE_GOLD_API_KEY || '9886e90c5c52f1a75a3ca50daccd91d4';
+const GOLD_API_URL = `https://api.metalpriceapi.com/v1/latest?api_key=${GOLD_API_KEY}&base=INR&currencies=XAU`;
 const CACHE_DURATION = 24 * 60 * 60 * 1000;
 
 let cachedPrice: { price: number; timestamp: Date } | null = null;
