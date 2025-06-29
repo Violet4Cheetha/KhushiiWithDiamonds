@@ -1,34 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Try both possible environment variable names
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_DATABASE_URL;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_DATABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-/*
-/ Debug logging
-console.log('Environment variables check:');
-console.log('VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
-console.log('VITE_SUPABASE_DATABASE_URL:', import.meta.env.VITE_SUPABASE_DATABASE_URL);
-console.log('VITE_SUPABASE_ANON_KEY exists:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
-console.log('All env vars:', Object.keys(import.meta.env).filter(key => key.includes('SUPABASE')));
-
-// Better error handling for missing environment variables
-if (!supabaseUrl) {
-  console.error('Missing Supabase URL environment variable');
-  console.error('Looking for: VITE_SUPABASE_URL or VITE_SUPABASE_DATABASE_URL');
-  console.error('Available env vars:', Object.keys(import.meta.env));
-  throw new Error('Supabase URL is required. Please check your environment variables.');
-}
-
-if (!supabaseAnonKey) {
-  console.error('Missing VITE_SUPABASE_ANON_KEY environment variable');
-  console.error('Available env vars:', Object.keys(import.meta.env));
-  throw new Error('Supabase Anon Key is required. Please check your environment variables.');
-}
-
-console.log('Using Supabase URL:', supabaseUrl);
-console.log('Supabase Key exists:', !!supabaseAnonKey);
-*/
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
