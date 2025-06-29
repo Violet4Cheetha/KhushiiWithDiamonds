@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase, Category } from '../lib/supabase';
 import { CategoryCard } from '../components/CategoryCard';
 import { GoldPriceDisplay } from '../components/GoldPriceDisplay';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Diamond } from 'lucide-react';
 
 export function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -57,11 +57,9 @@ export function HomePage() {
         <div className="absolute inset-0 bg-black opacity-50"></div>
         <div className="relative text-center text-white z-10">
           <div className="flex items-center justify-center mb-6">
-            <img 
-              src="/logo white_1751105895813.jpg" 
-              alt="Khushii With Diamond Logo" 
-              className="h-20 w-auto object-contain"
-            />
+            <div className="bg-white bg-opacity-20 backdrop-blur-sm p-4 rounded-2xl">
+              <Diamond className="h-16 w-16 text-white" />
+            </div>
           </div>
           <h1 className="text-5xl font-bold mb-4">Khushii With Diamond</h1>
           <p className="text-xl mb-8">Premium Indian Jewelry • Live Gold Pricing</p>

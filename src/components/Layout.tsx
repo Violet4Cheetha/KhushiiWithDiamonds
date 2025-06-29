@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronDown } from 'lucide-react';
+import { Menu, X, ChevronDown, Diamond } from 'lucide-react';
 import { supabase, Category } from '../lib/supabase';
 
 interface LayoutProps {
@@ -41,11 +41,9 @@ export function Layout({ children }: LayoutProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <Link to="/" className="flex items-center space-x-3">
-              <img 
-                src="/logo white_1751105895813.jpg" 
-                alt="Khushii With Diamond Logo" 
-                className="h-12 w-auto object-contain bg-gradient-to-r from-gray-800 to-black rounded-lg p-2"
-              />
+              <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-2 rounded-lg">
+                <Diamond className="h-8 w-8 text-white" />
+              </div>
               <div>
                 <span className="text-2xl font-bold text-gray-900">Khushii With Diamond</span>
                 <div className="text-xs text-gray-600">Premium Indian Jewelry</div>
@@ -163,11 +161,9 @@ export function Layout({ children }: LayoutProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center space-x-3 mb-4">
-                <img 
-                  src="/logo white_1751105895813.jpg" 
-                  alt="Khushii With Diamond Logo" 
-                  className="h-8 w-auto object-contain"
-                />
+                <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-2 rounded-lg">
+                  <Diamond className="h-6 w-6 text-white" />
+                </div>
                 <span className="text-lg font-semibold">Khushii With Diamond</span>
               </div>
               <p className="text-gray-400 mb-4">

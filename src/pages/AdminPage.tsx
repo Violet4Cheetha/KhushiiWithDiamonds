@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, JewelryItem, Category } from '../lib/supabase';
 import { AdminLogin } from '../components/AdminLogin';
-import { Plus, Edit, Trash2, Save, X, LogOut, Shield, Folder, Package, Settings, Image } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, LogOut, Shield, Folder, Package, Settings, Image, Diamond } from 'lucide-react';
 import { formatCurrency, calculateJewelryPriceSync } from '../lib/goldPrice';
 import { useGoldPrice } from '../hooks/useGoldPrice';
 import { useAdminSettings } from '../hooks/useAdminSettings';
@@ -262,11 +262,9 @@ export function AdminPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center space-x-4">
-          <img 
-            src="/logo white_1751105895813.jpg" 
-            alt="Khushii With Diamond Logo" 
-            className="h-12 w-auto object-contain bg-gradient-to-r from-gray-800 to-black rounded-lg p-2"
-          />
+          <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-2 rounded-lg">
+            <Diamond className="h-8 w-8 text-white" />
+          </div>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Khushii With Diamond</h1>
             <p className="text-gray-600 mt-1">Admin Panel - Manage your jewelry catalog</p>
