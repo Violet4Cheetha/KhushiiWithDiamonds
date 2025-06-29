@@ -44,7 +44,7 @@ export function Layout({ children }: LayoutProps) {
               <Crown className="h-8 w-8 text-yellow-600" />
               <div>
                 <span className="text-2xl font-bold text-gray-900">KhushiiWithDiamond</span>
-                <div className="text-xs text-gray-600">Premium Indian Jewelry</div>
+                <div className="text-xs text-gray-600">Premium Indian Jewellery</div>
               </div>
             </Link>
 
@@ -163,7 +163,7 @@ export function Layout({ children }: LayoutProps) {
                 <span className="text-lg font-semibold">KhushiiWithDiamond</span>
               </div>
               <p className="text-gray-400 mb-4">
-                Premium Indian jewelry with live gold pricing.
+                Premium Indian jewellery with live gold pricing.
               </p>
             </div>
             
