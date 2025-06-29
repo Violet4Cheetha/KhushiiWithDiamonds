@@ -6,11 +6,13 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 // Better error handling for missing environment variables
 if (!supabaseUrl) {
   console.error('Missing VITE_SUPABASE_URL environment variable');
+  console.error('Available env vars:', Object.keys(import.meta.env));
   throw new Error('Supabase URL is required. Please check your environment variables.');
 }
 
 if (!supabaseAnonKey) {
   console.error('Missing VITE_SUPABASE_ANON_KEY environment variable');
+  console.error('Available env vars:', Object.keys(import.meta.env));
   throw new Error('Supabase Anon Key is required. Please check your environment variables.');
 }
 
