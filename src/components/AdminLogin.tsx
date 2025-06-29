@@ -40,17 +40,10 @@ export function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <div className="flex items-center justify-center mb-6">
-            <img 
-              src="/logo white_1751105895813.jpg" 
-              alt="Khushii With Diamond Logo" 
-              className="h-16 w-auto object-contain bg-gradient-to-r from-gray-800 to-black rounded-lg p-2"
-            />
-          </div>
           <Lock className="mx-auto h-12 w-12 text-yellow-600" />
           <h2 className="mt-6 text-3xl font-bold text-gray-900">Admin Access</h2>
           <p className="mt-2 text-sm text-gray-600">
-            Sign in to manage Khushii With Diamond catalog
+            Sign in to manage the jewelry catalog
           </p>
         </div>
 

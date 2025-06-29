@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronDown } from 'lucide-react';
+import { Crown, Menu, X, ChevronDown } from 'lucide-react';
 import { supabase, Category } from '../lib/supabase';
 
 interface LayoutProps {
@@ -39,15 +39,11 @@ export function Layout({ children }: LayoutProps) {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-lg border-b-2 border-yellow-400">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <Link to="/" className="flex items-center space-x-3">
-              <img 
-                src="/logo white_1751105895813.jpg" 
-                alt="Khushii With Diamond Logo" 
-                className="h-12 w-auto object-contain bg-gradient-to-r from-gray-800 to-black rounded-lg p-2"
-              />
+          <div className="flex justify-between items-center h-16">
+            <Link to="/" className="flex items-center space-x-2">
+              <Crown className="h-8 w-8 text-yellow-600" />
               <div>
-                <span className="text-2xl font-bold text-gray-900">Khushii With Diamond</span>
+                <span className="text-2xl font-bold text-gray-900">LuxeJewels</span>
                 <div className="text-xs text-gray-600">Premium Indian Jewelry</div>
               </div>
             </Link>
@@ -162,30 +158,25 @@ export function Layout({ children }: LayoutProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center space-x-3 mb-4">
-                <img 
-                  src="/logo white_1751105895813.jpg" 
-                  alt="Khushii With Diamond Logo" 
-                  className="h-8 w-auto object-contain"
-                />
-                <span className="text-lg font-semibold">Khushii With Diamond</span>
+              <div className="flex items-center space-x-2 mb-4">
+                <Crown className="h-6 w-6 text-yellow-400" />
+                <span className="text-lg font-semibold">LuxeJewels</span>
               </div>
               <p className="text-gray-400 mb-4">
-                Premium Indian jewelry with live gold pricing and exquisite craftsmanship.
+                Premium Indian jewelry with live gold pricing.
               </p>
             </div>
             
             <div>
               <h3 className="text-lg font-semibold mb-4">Contact</h3>
               <ul className="space-y-2 text-gray-400">
-                <li>support@khushiiwithdiamonds.com</li>
-                <li>+91 98765 43210</li>
+                <li>support@luxejewels.in</li>
               </ul>
             </div>
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 Khushii With Diamond. All rights reserved.</p>
+            <p>&copy; 2025 LuxeJewels. All rights reserved.</p>
           </div>
         </div>
       </footer>
