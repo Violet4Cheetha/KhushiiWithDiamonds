@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronDown, Diamond, AlertCircle } from 'lucide-react';
-import { supabase, Category, isSupabaseConfigured } from '../lib/supabase';
+import { Menu, X, ChevronDown } from 'lucide-react';
+import { supabase, Category } from '../lib/supabase';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,30 +11,19 @@ export function Layout({ children }: LayoutProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const location = useLocation();
 
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        if (!isSupabaseConfigured()) {
-          setError('Database not configured');
-          return;
-        }
-
-        const { data, error: fetchError } = await supabase!
+        const { data } = await supabase
           .from('categories')
           .select('*')
           .order('name');
         
-        if (fetchError) {
-          throw fetchError;
-        }
-        
         if (data) setCategories(data);
       } catch (error) {
         console.error('Error loading categories:', error);
-        setError('Failed to load categories');
       }
     };
 
@@ -52,9 +41,11 @@ export function Layout({ children }: LayoutProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <Link to="/" className="flex items-center space-x-3">
-              <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-2 rounded-lg">
-                <Diamond className="h-8 w-8 text-white" />
-              </div>
+              <img 
+                src="/logo white_1751105895813.jpg" 
+                alt="Khushii With Diamond Logo" 
+                className="h-12 w-auto object-contain bg-gradient-to-r from-gray-800 to-black rounded-lg p-2"
+              />
               <div>
                 <span className="text-2xl font-bold text-gray-900">Khushii With Diamond</span>
                 <div className="text-xs text-gray-600">Premium Indian Jewelry</div>
@@ -88,23 +79,17 @@ export function Layout({ children }: LayoutProps) {
                 {isCategoryDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
                     <div className="py-1">
-                      {error ? (
-                        <div className="px-4 py-2 text-sm text-red-600 flex items-center">
-                          <AlertCircle className="h-4 w-4 mr-2" />
-                          Categories unavailable
-                        </div>
-                      ) : categories.length > 0 ? (
-                        categories.map((category) => (
-                          <Link
-                            key={category.id}
-                            to={`/category/${category.name}`}
-                            onClick={() => setIsCategoryDropdownOpen(false)}
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition-colors"
-                          >
-                            {category.name}
-                          </Link>
-                        ))
-                      ) : (
+                      {categories.map((category) => (
+                        <Link
+                          key={category.id}
+                          to={`/category/${category.name}`}
+                          onClick={() => setIsCategoryDropdownOpen(false)}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition-colors"
+                        >
+                          {category.name}
+                        </Link>
+                      ))}
+                      {categories.length === 0 && (
                         <div className="px-4 py-2 text-sm text-gray-500">
                           No categories available
                         </div>
@@ -145,27 +130,16 @@ export function Layout({ children }: LayoutProps) {
               <div className="px-3 py-2">
                 <div className="text-base font-medium text-gray-900 mb-2">Categories</div>
                 <div className="space-y-1 pl-4">
-                  {error ? (
-                    <div className="px-3 py-2 text-sm text-red-600 flex items-center">
-                      <AlertCircle className="h-4 w-4 mr-2" />
-                      Categories unavailable
-                    </div>
-                  ) : categories.length > 0 ? (
-                    categories.map((category) => (
-                      <Link
-                        key={category.id}
-                        to={`/category/${category.name}`}
-                        onClick={() => setIsMenuOpen(false)}
-                        className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:text-yellow-600 hover:bg-gray-100 transition-colors"
-                      >
-                        {category.name}
-                      </Link>
-                    ))
-                  ) : (
-                    <div className="px-3 py-2 text-sm text-gray-500">
-                      No categories available
-                    </div>
-                  )}
+                  {categories.map((category) => (
+                    <Link
+                      key={category.id}
+                      to={`/category/${category.name}`}
+                      onClick={() => setIsMenuOpen(false)}
+                      className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:text-yellow-600 hover:bg-gray-100 transition-colors"
+                    >
+                      {category.name}
+                    </Link>
+                  ))}
                 </div>
               </div>
             </div>
@@ -189,9 +163,11 @@ export function Layout({ children }: LayoutProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center space-x-3 mb-4">
-                <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-2 rounded-lg">
-                  <Diamond className="h-6 w-6 text-white" />
-                </div>
+                <img 
+                  src="/logo white_1751105895813.jpg" 
+                  alt="Khushii With Diamond Logo" 
+                  className="h-8 w-auto object-contain"
+                />
                 <span className="text-lg font-semibold">Khushii With Diamond</span>
               </div>
               <p className="text-gray-400 mb-4">

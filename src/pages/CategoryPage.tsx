@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { supabase, JewelryItem, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, JewelryItem } from '../lib/supabase';
 import { JewelryCard } from '../components/JewelryCard';
-import { Search, Filter, Sparkles, AlertCircle } from 'lucide-react';
+import { Search, Filter, Sparkles } from 'lucide-react';
 
 export function CategoryPage() {
   const { categoryName } = useParams<{ categoryName: string }>();
@@ -11,29 +11,17 @@ export function CategoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadItems = async () => {
       if (!categoryName) return;
 
       try {
-        if (!isSupabaseConfigured()) {
-          setError('Database not configured - no items to display');
-          setItems([]);
-          setFilteredItems([]);
-          return;
-        }
-
-        const { data, error: fetchError } = await supabase!
+        const { data } = await supabase
           .from('jewelry_items')
           .select('*')
           .eq('category', categoryName)
           .order('created_at', { ascending: false });
-
-        if (fetchError) {
-          throw fetchError;
-        }
 
         if (data) {
           setItems(data);
@@ -41,9 +29,6 @@ export function CategoryPage() {
         }
       } catch (error) {
         console.error('Error loading items:', error);
-        setError('Failed to load jewelry items');
-        setItems([]);
-        setFilteredItems([]);
       } finally {
         setLoading(false);
       }
@@ -84,15 +69,6 @@ export function CategoryPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {error && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-          <div className="flex items-center">
-            <AlertCircle className="h-5 w-5 text-yellow-600 mr-2" />
-            <p className="text-yellow-800 text-sm">{error}</p>
-          </div>
-        </div>
-      )}
-
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">{categoryName}</h1>
         <p className="text-xl text-gray-600">{filteredItems.length} items available</p>
@@ -129,9 +105,7 @@ export function CategoryPage() {
         <div className="text-center py-12">
           <Sparkles className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-medium text-gray-900 mb-2">No items found</h3>
-          <p className="text-gray-600">
-            {error ? 'Please check back later or contact support.' : 'Try adjusting your search or filters.'}
-          </p>
+          <p className="text-gray-600">Try adjusting your search or filters.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

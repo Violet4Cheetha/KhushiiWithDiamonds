@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { Lock, Eye, EyeOff, Diamond, AlertCircle } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { Lock, Eye, EyeOff } from 'lucide-react';
 
 interface AdminLoginProps {
   onLoginSuccess: () => void;
@@ -12,39 +12,6 @@ export function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  // Check if Supabase is configured
-  if (!isSupabaseConfigured()) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center mb-6">
-              <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-3 rounded-lg">
-                <Diamond className="h-12 w-12 text-white" />
-              </div>
-            </div>
-            <AlertCircle className="mx-auto h-12 w-12 text-red-600" />
-            <h2 className="mt-6 text-3xl font-bold text-gray-900">Database Not Configured</h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Supabase environment variables are missing. Please configure your database connection.
-            </p>
-          </div>
-
-          <div className="bg-red-50 border border-red-200 rounded-md p-4">
-            <h3 className="text-sm font-medium text-red-800 mb-2">Required Environment Variables:</h3>
-            <ul className="text-sm text-red-700 space-y-1">
-              <li>• VITE_SUPABASE_URL</li>
-              <li>• VITE_SUPABASE_ANON_KEY</li>
-            </ul>
-            <p className="text-xs text-red-600 mt-2">
-              Please add these to your Netlify environment variables and redeploy.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -74,9 +41,11 @@ export function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex items-center justify-center mb-6">
-            <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-3 rounded-lg">
-              <Diamond className="h-12 w-12 text-white" />
-            </div>
+            <img 
+              src="/logo white_1751105895813.jpg" 
+              alt="Khushii With Diamond Logo" 
+              className="h-16 w-auto object-contain bg-gradient-to-r from-gray-800 to-black rounded-lg p-2"
+            />
           </div>
           <Lock className="mx-auto h-12 w-12 text-yellow-600" />
           <h2 className="mt-6 text-3xl font-bold text-gray-900">Admin Access</h2>
