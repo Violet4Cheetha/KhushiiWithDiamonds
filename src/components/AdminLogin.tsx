@@ -43,7 +43,7 @@ export function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
           <Lock className="mx-auto h-12 w-12 text-yellow-600" />
           <h2 className="mt-6 text-3xl font-bold text-gray-900">Admin Access</h2>
           <p className="mt-2 text-sm text-gray-600">
-            Sign in to manage the jewelry catalog
+            Sign in to manage the jewellery catalog
           </p>
         </div>
 
