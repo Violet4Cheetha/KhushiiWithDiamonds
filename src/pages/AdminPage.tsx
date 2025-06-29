@@ -261,9 +261,16 @@ export function AdminPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Jewelry Admin Panel</h1>
-          <p className="text-gray-600 mt-1">Manage your jewelry catalog</p>
+        <div className="flex items-center space-x-4">
+          <img 
+            src="/logo white_1751105895813.jpg" 
+            alt="Khushii With Diamond Logo" 
+            className="h-12 w-auto object-contain bg-gradient-to-r from-gray-800 to-black rounded-lg p-2"
+          />
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Khushii With Diamond</h1>
+            <p className="text-gray-600 mt-1">Admin Panel - Manage your jewelry catalog</p>
+          </div>
         </div>
         <div className="flex items-center space-x-4">
           <div className="text-sm text-gray-600">
