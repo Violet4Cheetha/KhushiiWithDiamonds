@@ -61,7 +61,7 @@ export function AdminPage() {
         return;
       }
 
-      const { data: { session } } = await supabase!.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
       setIsAuthenticated(!!session);
     } catch (error) {
       console.error('Error checking auth status:', error);
@@ -74,7 +74,7 @@ export function AdminPage() {
 
   const handleLogout = async () => {
     try {
-      if (supabase) {
+      if (isSupabaseConfigured()) {
         await supabase.auth.signOut();
       }
       setIsAuthenticated(false);
@@ -93,8 +93,8 @@ export function AdminPage() {
 
     try {
       const [itemsResponse, categoriesResponse] = await Promise.all([
-        supabase!.from('jewelry_items').select('*').order('created_at', { ascending: false }),
-        supabase!.from('categories').select('*').order('name')
+        supabase.from('jewelry_items').select('*').order('created_at', { ascending: false }),
+        supabase.from('categories').select('*').order('name')
       ]);
 
       if (itemsResponse.data) setItems(itemsResponse.data);
@@ -153,13 +153,13 @@ export function AdminPage() {
 
     try {
       if (editingItem) {
-        const { error } = await supabase!
+        const { error } = await supabase
           .from('jewelry_items')
           .update({ ...itemData, updated_at: new Date().toISOString() })
           .eq('id', editingItem.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase!.from('jewelry_items').insert([itemData]);
+        const { error } = await supabase.from('jewelry_items').insert([itemData]);
         if (error) throw error;
       }
       
@@ -176,13 +176,13 @@ export function AdminPage() {
     
     try {
       if (editingCategory) {
-        const { error } = await supabase!
+        const { error } = await supabase
           .from('categories')
           .update(categoryFormData)
           .eq('id', editingCategory.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase!.from('categories').insert([categoryFormData]);
+        const { error } = await supabase.from('categories').insert([categoryFormData]);
         if (error) throw error;
       }
       
@@ -219,7 +219,7 @@ export function AdminPage() {
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this item?')) {
       try {
-        const { error } = await supabase!.from('jewelry_items').delete().eq('id', id);
+        const { error } = await supabase.from('jewelry_items').delete().eq('id', id);
         if (error) throw error;
         await loadData();
       } catch (error) {
@@ -230,7 +230,7 @@ export function AdminPage() {
   };
 
   const handleDeleteCategory = async (id: string, categoryName: string) => {
-    const { count } = await supabase!
+    const { count } = await supabase
       .from('jewelry_items')
       .select('*', { count: 'exact', head: true })
       .eq('category', categoryName);
@@ -242,7 +242,7 @@ export function AdminPage() {
 
     if (confirm(`Are you sure you want to delete the category "${categoryName}"?`)) {
       try {
-        const { error } = await supabase!.from('categories').delete().eq('id', id);
+        const { error } = await supabase.from('categories').delete().eq('id', id);
         if (error) throw error;
         await loadData();
       } catch (error) {
@@ -271,7 +271,7 @@ export function AdminPage() {
     );
   }
 
-  if (error && !isSupabaseConfigured()) {
+  if (!isSupabaseConfigured()) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">

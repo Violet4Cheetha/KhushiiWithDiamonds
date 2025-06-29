@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export function useAdminSettings() {
   const [fallbackGoldPrice, setFallbackGoldPrice] = useState(5450);
@@ -8,6 +8,11 @@ export function useAdminSettings() {
 
   const loadSettings = async () => {
     try {
+      if (!isSupabaseConfigured()) {
+        setLoading(false);
+        return;
+      }
+
       const { data } = await supabase
         .from('admin_settings')
         .select('setting_key, setting_value')
@@ -29,6 +34,10 @@ export function useAdminSettings() {
 
   const updateSetting = async (key: string, value: string) => {
     try {
+      if (!isSupabaseConfigured()) {
+        return false;
+      }
+
       const { error } = await supabase
         .from('admin_settings')
         .update({ setting_value: value })
