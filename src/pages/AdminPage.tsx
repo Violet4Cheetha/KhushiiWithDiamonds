@@ -807,7 +807,7 @@ export function AdminPage() {
                   placeholder="18"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  GST percentage applied to all jewelry items
+                  GST percentage applied to all jewellery items
                 </p>
               </div>
 
