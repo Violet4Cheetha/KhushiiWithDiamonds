@@ -88,7 +88,7 @@ export function HomePage() {
       <section className="relative h-96 bg-gradient-to-r from-orange-900 via-red-900 to-yellow-900 flex items-center justify-center">
         <div className="absolute inset-0 bg-black opacity-40"></div>
         <div className="relative text-center text-white z-10">
-          <img src="https://raw.githubusercontent.com/Violet4Cheetha/KhushiiWithDiamond/ca3db1f9c4e816d8821a5773ff03dc6257551f71/Assets/Logo%20White%20NoBG.png?token=GHSAT0AAAAAADGPYEN77JTOA2EZERNKYXWY2DCE6RQ" className="pb-4"></img>
+          <img src="https://drive.google.com/file/d/1CyHv_FrXF6oyH6e5jptsRvwKzvp5UmpL/view?usp=drive_link" className="pb-4"></img>
         </div>
       </section>
 
