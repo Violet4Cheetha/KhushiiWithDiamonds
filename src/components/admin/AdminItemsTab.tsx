@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, JewelryItem, Category } from '../../lib/supabase';
-import { Plus, Edit, Trash2, Save, X, Image } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Image, ChevronRight } from 'lucide-react';
 import { formatCurrency, calculateJewelryPriceSync } from '../../lib/goldPrice';
 
 interface AdminItemsTabProps {
@@ -105,6 +105,27 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
       item.base_price, item.gold_weight, item.gold_quality,
       item.diamond_weight, item.diamond_cost_per_carat,
       item.making_charges_per_gram, goldPrice, gstRate
+    );
+  };
+
+  // Organize categories for dropdown
+  const topLevelCategories = categories.filter(cat => !cat.parent_id);
+  const getSubcategories = (parentId: string) => 
+    categories.filter(cat => cat.parent_id === parentId);
+
+  const CategoryOption = ({ category, level = 0 }: { category: Category; level?: number }) => {
+    const subcategories = getSubcategories(category.id);
+    const indent = '  '.repeat(level);
+    
+    return (
+      <>
+        <option key={category.id} value={category.name}>
+          {indent}{category.name}
+        </option>
+        {subcategories.map(sub => (
+          <CategoryOption key={sub.id} category={sub} level={level + 1} />
+        ))}
+      </>
     );
   };
 
@@ -271,10 +292,13 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
                 >
                   <option value="">Select Category</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                  {topLevelCategories.map((cat) => (
+                    <CategoryOption key={cat.id} category={cat} />
                   ))}
                 </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Select from main categories and subcategories. Indented options are subcategories.
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
