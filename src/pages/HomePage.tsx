@@ -88,7 +88,7 @@ export function HomePage() {
       <section className="relative h-96 bg-gradient-to-r from-orange-900 via-red-900 to-yellow-900 flex items-center justify-center">
         <div className="absolute inset-0 bg-black opacity-40"></div>
         <div className="relative text-center text-white z-10">
-          <img src="Assets/Logo White NoBG.png" alt="Khushii With Diamond">
+          <img src="Assets/Logo White NoBG.png" alt="Khushii With Diamond" className="hidden">
         </div>
       </section>
 
