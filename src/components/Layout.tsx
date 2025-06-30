@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Crown, Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { Cem, Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
 import { supabase, Category } from '../lib/supabase';
 
 interface LayoutProps {
@@ -114,7 +114,7 @@ export function Layout({ children }: LayoutProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link to="/" className="flex items-center space-x-2">
-              <Crown className="h-8 w-8 text-yellow-600" />
+              <Gem className="h-8 w-8 text-yellow-600" />
               <div>
                 <span className="text-2xl font-bold text-gray-900">KhushiiWithDiamond</span>
                 <div className="text-xs text-gray-600">Premium Indian Jewellery</div>
@@ -223,7 +223,7 @@ export function Layout({ children }: LayoutProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center space-x-2 mb-4">
-                <Crown className="h-6 w-6 text-yellow-400" />
+                <Gem className="h-6 w-6 text-yellow-400" />
                 <span className="text-lg font-semibold">KhushiiWithDiamond</span>
               </div>
               <p className="text-gray-400 mb-4">
