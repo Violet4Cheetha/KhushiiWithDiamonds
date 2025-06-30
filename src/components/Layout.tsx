@@ -227,7 +227,7 @@ export function Layout({ children }: LayoutProps) {
                 <span className="text-lg font-semibold">KhushiiWithDiamond</span>
               </div>
               <p className="text-gray-400 mb-4">
-                Premium Indian jewellery with live gold pricing.
+                Premium Indian jewellery.
               </p>
             </div>
             
