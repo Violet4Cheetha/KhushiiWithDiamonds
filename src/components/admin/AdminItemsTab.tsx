@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, JewelryItem, Category } from '../../lib/supabase';
-import { Plus, Edit, Trash2, Save, X, Image, ChevronRight } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Image, ChevronRight, ChevronDown, Folder, FolderOpen } from 'lucide-react';
 import { formatCurrency, calculateJewelryPriceSync } from '../../lib/goldPrice';
 
 interface AdminItemsTabProps {
@@ -13,6 +13,8 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
   const [items, setItems] = useState<JewelryItem[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingItem, setEditingItem] = useState<JewelryItem | null>(null);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   
   const [formData, setFormData] = useState({
     name: '', description: '', category: '', images: '', gold_weight: 0,
@@ -45,6 +47,8 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
     });
     setShowAddForm(false);
     setEditingItem(null);
+    setShowCategoryDropdown(false);
+    setExpandedCategories(new Set());
   };
 
   const startEdit = (item: JewelryItem) => {
@@ -108,25 +112,25 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
     );
   };
 
-  // Organize categories for nested dropdown
+  // Organize categories for expandable dropdown
   const topLevelCategories = categories.filter(cat => !cat.parent_id);
   const getSubcategories = (parentId: string) => 
     categories.filter(cat => cat.parent_id === parentId);
 
-  const CategoryOption = ({ category, level = 0 }: { category: Category; level?: number }) => {
-    const subcategories = getSubcategories(category.id);
-    const prefix = level === 0 ? '' : '  > ';
-    
-    return (
-      <>
-        <option key={category.id} value={category.name} className="font-medium">
-          {prefix}{category.name}
-        </option>
-        {subcategories.map(sub => (
-          <CategoryOption key={sub.id} category={sub} level={level + 1} />
-        ))}
-      </>
-    );
+  const toggleExpanded = (categoryId: string) => {
+    const newExpanded = new Set(expandedCategories);
+    if (newExpanded.has(categoryId)) {
+      newExpanded.delete(categoryId);
+    } else {
+      newExpanded.add(categoryId);
+    }
+    setExpandedCategories(newExpanded);
+  };
+
+  const selectCategory = (categoryName: string) => {
+    setFormData({ ...formData, category: categoryName });
+    setShowCategoryDropdown(false);
+    setExpandedCategories(new Set());
   };
 
   // Get category display name with hierarchy
@@ -139,6 +143,59 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
       return parent ? `${parent.name} → ${categoryName}` : categoryName;
     }
     return categoryName;
+  };
+
+  const CategoryMenuItem = ({ category, level = 0 }: { category: Category; level?: number }) => {
+    const subcategories = getSubcategories(category.id);
+    const hasSubcategories = subcategories.length > 0;
+    const isExpanded = expandedCategories.has(category.id);
+    const paddingLeft = level * 16;
+
+    return (
+      <div key={category.id}>
+        <div className="flex items-center hover:bg-gray-50">
+          <button
+            onClick={() => selectCategory(category.name)}
+            className="flex-1 text-left px-4 py-2 text-sm text-gray-700 hover:text-yellow-600 transition-colors"
+            style={{ paddingLeft: `${16 + paddingLeft}px` }}
+          >
+            <div className="flex items-center space-x-2">
+              {hasSubcategories ? (
+                <Folder className="h-4 w-4 text-blue-500" />
+              ) : (
+                <div className="h-4 w-4" />
+              )}
+              <span>{category.name}</span>
+            </div>
+          </button>
+          {hasSubcategories && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                toggleExpanded(category.id);
+              }}
+              className="p-2 text-gray-400 hover:text-gray-600"
+            >
+              <ChevronRight 
+                className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} 
+              />
+            </button>
+          )}
+        </div>
+        
+        {hasSubcategories && isExpanded && (
+          <div className="bg-gray-50">
+            {subcategories.map((subcategory) => (
+              <CategoryMenuItem 
+                key={subcategory.id} 
+                category={subcategory} 
+                level={level + 1} 
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -307,18 +364,33 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                <select
-                  required
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500 font-mono text-sm"
-                  style={{ fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace' }}
-                >
-                  <option value="">Select Category</option>
-                  {topLevelCategories.map((cat) => (
-                    <CategoryOption key={cat.id} category={cat} />
-                  ))}
-                </select>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500 text-left flex items-center justify-between bg-white"
+                  >
+                    <span className={formData.category ? 'text-gray-900' : 'text-gray-500'}>
+                      {formData.category || 'Select Category'}
+                    </span>
+                    <ChevronDown className={`h-4 w-4 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {showCategoryDropdown && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                      <div className="py-1">
+                        {topLevelCategories.map((category) => (
+                          <CategoryMenuItem key={category.id} category={category} />
+                        ))}
+                        {topLevelCategories.length === 0 && (
+                          <div className="px-4 py-2 text-sm text-gray-500">
+                            No categories available
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
                 
                 {/* Category Preview */}
                 {formData.category && (
@@ -431,6 +503,14 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
             </form>
           </div>
         </div>
+      )}
+
+      {/* Dropdown Overlay */}
+      {showCategoryDropdown && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setShowCategoryDropdown(false)}
+        />
       )}
     </>
   );
