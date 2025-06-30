@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, Category, JewelryItem } from '../../lib/supabase';
-import { Plus, Edit, Trash2, Save, X, Image, ChevronRight, Folder, FolderOpen, Upload, FileImage } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Image, ChevronRight, Folder, FolderOpen, Upload, FileImage, Loader } from 'lucide-react';
+import { GoogleDriveUploadService } from '../../lib/googleDriveUpload';
 
 interface AdminCategoriesTabProps {
   items: JewelryItem[];
@@ -12,6 +13,7 @@ export function AdminCategoriesTab({ items, onCategoriesChange }: AdminCategorie
   const [showAddCategoryForm, setShowAddCategoryForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [uploading, setUploading] = useState(false);
   
   const [categoryFormData, setCategoryFormData] = useState({
     name: '', 
@@ -47,6 +49,7 @@ export function AdminCategoriesTab({ items, onCategoriesChange }: AdminCategorie
     setSelectedImages([]);
     setShowAddCategoryForm(false);
     setEditingCategory(null);
+    setUploading(false);
   };
 
   const startEditCategory = (category: Category) => {
@@ -74,20 +77,31 @@ export function AdminCategoriesTab({ items, onCategoriesChange }: AdminCategorie
 
   const handleCategorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setUploading(true);
     
-    // For now, we'll use placeholder URLs until the backend service is implemented
-    // In the next phase, this will be replaced with actual file upload to Google Drive
-    const placeholderImageUrls = selectedImages.map((file, index) => 
-      `https://placeholder-for-${file.name}-${index}`
-    ).join(', ');
-
-    const submitData = {
-      ...categoryFormData,
-      parent_id: categoryFormData.parent_id || null,
-      image_url: placeholderImageUrls || '', // Will be replaced with actual Google Drive URLs
-    };
-
     try {
+      let imageUrls: string[] = [];
+
+      // Upload images to Google Drive if any are selected
+      if (selectedImages.length > 0) {
+        try {
+          imageUrls = await GoogleDriveUploadService.uploadCategoryImages(
+            selectedImages,
+            categoryFormData.name
+          );
+          console.log('Successfully uploaded category images:', imageUrls);
+        } catch (uploadError) {
+          console.error('Image upload failed:', uploadError);
+          alert(`Image upload failed: ${uploadError.message}. The category will be saved without images.`);
+        }
+      }
+
+      const submitData = {
+        ...categoryFormData,
+        parent_id: categoryFormData.parent_id || null,
+        image_url: imageUrls.join(', '), // Store multiple URLs as comma-separated string
+      };
+
       if (editingCategory) {
         const { error } = await supabase
           .from('categories')
@@ -102,15 +116,11 @@ export function AdminCategoriesTab({ items, onCategoriesChange }: AdminCategorie
       await loadCategories();
       resetCategoryForm();
       
-      // TODO: In the next phase, implement actual file upload to Google Drive here
-      if (selectedImages.length > 0) {
-        console.log('Files to upload to Google Drive:', selectedImages);
-        console.log('Target folder: WebCatalog(DO NOT EDIT)/');
-        console.log('File names will be:', categoryFormData.name);
-      }
     } catch (error) {
       console.error('Error saving category:', error);
       alert('Error saving category. Please check your permissions and try again.');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -294,6 +304,7 @@ export function AdminCategoriesTab({ items, onCategoriesChange }: AdminCategorie
                   value={categoryFormData.parent_id}
                   onChange={(e) => setCategoryFormData({ ...categoryFormData, parent_id: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
+                  disabled={uploading}
                 >
                   <option value="">None (Top-level category)</option>
                   {topLevelCategories.map((cat) => (
@@ -314,6 +325,7 @@ export function AdminCategoriesTab({ items, onCategoriesChange }: AdminCategorie
                   onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
                   placeholder="e.g., Heavy Rings, Light Rings"
+                  disabled={uploading}
                 />
               </div>
 
@@ -325,6 +337,7 @@ export function AdminCategoriesTab({ items, onCategoriesChange }: AdminCategorie
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
                   rows={3}
                   placeholder="Brief description of the category"
+                  disabled={uploading}
                 />
               </div>
 
@@ -334,7 +347,7 @@ export function AdminCategoriesTab({ items, onCategoriesChange }: AdminCategorie
                 </label>
                 <div className="space-y-3">
                   <div className="flex items-center justify-center w-full">
-                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                    <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <Upload className="w-8 h-8 mb-2 text-gray-500" />
                         <p className="mb-2 text-sm text-gray-500">
@@ -348,6 +361,7 @@ export function AdminCategoriesTab({ items, onCategoriesChange }: AdminCategorie
                         accept="image/*"
                         onChange={handleImageChange}
                         className="hidden"
+                        disabled={uploading}
                       />
                     </label>
                   </div>
@@ -370,6 +384,7 @@ export function AdminCategoriesTab({ items, onCategoriesChange }: AdminCategorie
                               type="button"
                               onClick={() => removeImage(index)}
                               className="text-red-500 hover:text-red-700"
+                              disabled={uploading}
                             >
                               <X className="h-4 w-4" />
                             </button>
@@ -390,15 +405,26 @@ export function AdminCategoriesTab({ items, onCategoriesChange }: AdminCategorie
               <div className="flex space-x-4 pt-4">
                 <button
                   type="submit"
-                  className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 flex items-center space-x-2"
+                  disabled={uploading}
+                  className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Save className="h-4 w-4" />
-                  <span>{editingCategory ? 'Update' : 'Add'} Category</span>
+                  {uploading ? (
+                    <>
+                      <Loader className="h-4 w-4 animate-spin" />
+                      <span>Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      <span>{editingCategory ? 'Update' : 'Add'} Category</span>
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"
                   onClick={resetCategoryForm}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                  disabled={uploading}
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>

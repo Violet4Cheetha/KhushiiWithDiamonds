@@ -1,0 +1,300 @@
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
+interface UploadRequest {
+  files: Array<{
+    name: string
+    data: string // base64 encoded file data
+    mimeType: string
+  }>
+  folderPath: string // e.g., "WebCatalog(DO NOT EDIT)/Rings/Heavy Rings"
+  itemName: string // Name to use for the files
+  itemType: 'category' | 'jewelry'
+}
+
+interface GoogleDriveFile {
+  id: string
+  name: string
+  webViewLink: string
+  webContentLink: string
+}
+
+class GoogleDriveService {
+  private clientId: string
+  private clientSecret: string
+  private refreshToken: string
+  private accessToken: string | null = null
+
+  constructor() {
+    this.clientId = '940999814795-pt1k5s5f6f0kr1otsv66ch898goputkc.apps.googleusercontent.com'
+    this.clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET') || ''
+    this.refreshToken = Deno.env.get('GOOGLE_REFRESH_TOKEN') || ''
+  }
+
+  async getAccessToken(): Promise<string> {
+    if (this.accessToken) {
+      return this.accessToken
+    }
+
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        client_id: this.clientId,
+        client_secret: this.clientSecret,
+        refresh_token: this.refreshToken,
+        grant_type: 'refresh_token',
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to get access token: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    this.accessToken = data.access_token
+    return this.accessToken
+  }
+
+  async findOrCreateFolder(folderPath: string): Promise<string> {
+    const accessToken = await this.getAccessToken()
+    const pathParts = folderPath.split('/')
+    let currentFolderId = 'root'
+
+    for (const folderName of pathParts) {
+      if (!folderName.trim()) continue
+
+      // Search for existing folder
+      const searchResponse = await fetch(
+        `https://www.googleapis.com/drive/v3/files?q=name='${encodeURIComponent(folderName)}' and parents in '${currentFolderId}' and mimeType='application/vnd.google-apps.folder'&fields=files(id,name)`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+        }
+      )
+
+      if (!searchResponse.ok) {
+        throw new Error(`Failed to search for folder: ${searchResponse.statusText}`)
+      }
+
+      const searchData = await searchResponse.json()
+      
+      if (searchData.files && searchData.files.length > 0) {
+        // Folder exists
+        currentFolderId = searchData.files[0].id
+      } else {
+        // Create new folder
+        const createResponse = await fetch('https://www.googleapis.com/drive/v3/files', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: folderName,
+            mimeType: 'application/vnd.google-apps.folder',
+            parents: [currentFolderId],
+          }),
+        })
+
+        if (!createResponse.ok) {
+          throw new Error(`Failed to create folder: ${createResponse.statusText}`)
+        }
+
+        const createData = await createResponse.json()
+        currentFolderId = createData.id
+      }
+    }
+
+    return currentFolderId
+  }
+
+  async uploadFile(
+    fileName: string,
+    fileData: string,
+    mimeType: string,
+    folderId: string
+  ): Promise<GoogleDriveFile> {
+    const accessToken = await this.getAccessToken()
+
+    // Convert base64 to binary
+    const binaryData = Uint8Array.from(atob(fileData), c => c.charCodeAt(0))
+
+    // Create multipart upload
+    const boundary = '-------314159265358979323846'
+    const delimiter = `\r\n--${boundary}\r\n`
+    const close_delim = `\r\n--${boundary}--`
+
+    const metadata = {
+      name: fileName,
+      parents: [folderId],
+    }
+
+    const multipartRequestBody =
+      delimiter +
+      'Content-Type: application/json\r\n\r\n' +
+      JSON.stringify(metadata) +
+      delimiter +
+      `Content-Type: ${mimeType}\r\n` +
+      'Content-Transfer-Encoding: base64\r\n\r\n' +
+      fileData +
+      close_delim
+
+    const response = await fetch(
+      'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink,webContentLink',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': `multipart/related; boundary="${boundary}"`,
+        },
+        body: multipartRequestBody,
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(`Failed to upload file: ${response.statusText}`)
+    }
+
+    return await response.json()
+  }
+
+  async makeFilePublic(fileId: string): Promise<void> {
+    const accessToken = await this.getAccessToken()
+
+    const response = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${fileId}/permissions`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          role: 'reader',
+          type: 'anyone',
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(`Failed to make file public: ${response.statusText}`)
+    }
+  }
+
+  getDirectImageUrl(fileId: string): string {
+    return `https://drive.google.com/uc?export=view&id=${fileId}`
+  }
+}
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
+  try {
+    if (req.method !== 'POST') {
+      return new Response(
+        JSON.stringify({ error: 'Method not allowed' }),
+        { 
+          status: 405, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    const uploadRequest: UploadRequest = await req.json()
+    
+    if (!uploadRequest.files || uploadRequest.files.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'No files provided' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    const driveService = new GoogleDriveService()
+    
+    // Find or create the target folder
+    const folderId = await driveService.findOrCreateFolder(uploadRequest.folderPath)
+    
+    const uploadedFiles: Array<{
+      originalName: string
+      driveFileId: string
+      fileName: string
+      directUrl: string
+      webViewLink: string
+    }> = []
+
+    // Upload each file
+    for (let i = 0; i < uploadRequest.files.length; i++) {
+      const file = uploadRequest.files[i]
+      
+      // Generate filename based on item name and index
+      const fileExtension = file.name.split('.').pop() || 'jpg'
+      const fileName = uploadRequest.files.length === 1 
+        ? `${uploadRequest.itemName}.${fileExtension}`
+        : `${uploadRequest.itemName}_${i + 1}.${fileExtension}`
+
+      // Upload file to Google Drive
+      const driveFile = await driveService.uploadFile(
+        fileName,
+        file.data,
+        file.mimeType,
+        folderId
+      )
+
+      // Make file publicly accessible
+      await driveService.makeFilePublic(driveFile.id)
+
+      // Get direct image URL
+      const directUrl = driveService.getDirectImageUrl(driveFile.id)
+
+      uploadedFiles.push({
+        originalName: file.name,
+        driveFileId: driveFile.id,
+        fileName: fileName,
+        directUrl: directUrl,
+        webViewLink: driveFile.webViewLink,
+      })
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        folderId: folderId,
+        folderPath: uploadRequest.folderPath,
+        files: uploadedFiles,
+        imageUrls: uploadedFiles.map(f => f.directUrl), // For easy use in frontend
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
+
+  } catch (error) {
+    console.error('Upload error:', error)
+    
+    return new Response(
+      JSON.stringify({ 
+        error: 'Upload failed', 
+        details: error.message 
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
+  }
+})
