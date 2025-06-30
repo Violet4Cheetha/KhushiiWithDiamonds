@@ -7,7 +7,7 @@ import { Sparkles } from 'lucide-react';
 
 export function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [itemCounts, setItemCounts] = useState<Record<string, number>>({]);
+  const [itemCounts, setItemCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showDebug, setShowDebug] = useState(false);
