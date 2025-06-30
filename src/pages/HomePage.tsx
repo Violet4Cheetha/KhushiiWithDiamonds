@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase, Category } from '../lib/supabase';
 import { CategoryCard } from '../components/CategoryCard';
-import { GoldPriceDisplay } from '../components/GoldPriceDisplay';
 import { Sparkles } from 'lucide-react';
 
 export function HomePage() {
@@ -84,34 +83,13 @@ export function HomePage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="text-center max-w-2xl">
-          <div className="text-red-600 text-6xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Connection Error</h1>
-          <p className="text-gray-600 mb-6">{error}</p>
-          
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-12">
       <section className="relative h-96 bg-gradient-to-r from-orange-900 via-red-900 to-yellow-900 flex items-center justify-center">
         <div className="absolute inset-0 bg-black opacity-40"></div>
         <div className="relative text-center text-white z-10">
           <h1 className="text-5xl font-bold mb-4">Premium Indian Jewellery</h1>
-          <p className="text-xl mb-8">Live Gold Pricing</p>
           <div className="max-w-md mx-auto">
-            <GoldPriceDisplay />
           </div>
         </div>
       </section>
