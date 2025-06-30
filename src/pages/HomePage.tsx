@@ -88,7 +88,7 @@ export function HomePage() {
       <section className="relative h-96 bg-gradient-to-r from-orange-900 via-red-900 to-yellow-900 flex items-center justify-center">
         <div className="absolute inset-0 bg-black opacity-40"></div>
         <div className="relative text-center text-white z-10">
-          <img src="https://drive.google.com/file/d/1CyHv_FrXF6oyH6e5jptsRvwKzvp5UmpL/view?usp=sharing" className="pb-4"></img>
+          <img src="https://drive.google.com/thumbnail?id=1CyHv_FrXF6oyH6e5jptsRvwKzvp5UmpL" className="pb-4"></img>
         </div>
       </section>
 
