@@ -9,19 +9,20 @@ export function HomePage() {
   const [itemCounts, setItemCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showDebug, setShowDebug] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         console.log('Attempting to load categories...');
         
+        // Load only top-level categories (no parent_id)
         const { data: categoriesData, error: categoriesError } = await supabase
           .from('categories')
           .select('*')
+          .is('parent_id', null)
           .order('name');
 
-        console.log('Categories response:', { data: categoriesData, error: categoriesError });
+        console.log('Top-level categories response:', { data: categoriesData, error: categoriesError });
 
         if (categoriesError) {
           throw categoriesError;
@@ -30,12 +31,27 @@ export function HomePage() {
         if (categoriesData) {
           setCategories(categoriesData);
 
+          // Count items for each top-level category (including items in subcategories)
           const counts: Record<string, number> = {};
+          
           for (const category of categoriesData) {
+            // Get all subcategories for this parent category
+            const { data: subcategories } = await supabase
+              .from('categories')
+              .select('name')
+              .eq('parent_id', category.id);
+
+            // Create array of category names to search (parent + all subcategories)
+            const categoryNames = [category.name];
+            if (subcategories) {
+              categoryNames.push(...subcategories.map(sub => sub.name));
+            }
+
+            // Count items in parent category and all its subcategories
             const { count, error: countError } = await supabase
               .from('jewelry_items')
               .select('*', { count: 'exact', head: true })
-              .eq('category', category.name);
+              .in('category', categoryNames);
             
             if (countError) {
               console.warn(`Error counting items for ${category.name}:`, countError);
@@ -68,7 +84,24 @@ export function HomePage() {
     );
   }
 
-  
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center max-w-2xl">
+          <div className="text-red-600 text-6xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Connection Error</h1>
+          <p className="text-gray-600 mb-6">{error}</p>
+          
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-12">
@@ -95,16 +128,11 @@ export function HomePage() {
             <h3 className="text-xl font-medium text-gray-900 mb-2">No categories found</h3>
             <p className="text-gray-600 mb-4">There might be a database connection issue.</p>
             <button
-              onClick={() => setShowDebug(!showDebug)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              onClick={() => window.location.reload()}
+              className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700"
             >
-              Show Debug Info
+              Retry
             </button>
-            {showDebug && (
-              <div className="mt-6">
-                <DebugPanel />
-              </div>
-            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
