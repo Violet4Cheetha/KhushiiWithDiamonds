@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, Category, JewelryItem } from '../../lib/supabase';
-import { Plus, Edit, Trash2, Save, X, Image, ChevronRight, Folder, FolderOpen } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Image, ChevronRight, Folder, FolderOpen, Upload, FileImage } from 'lucide-react';
 
 interface AdminCategoriesTabProps {
   items: JewelryItem[];
@@ -14,8 +14,13 @@ export function AdminCategoriesTab({ items, onCategoriesChange }: AdminCategorie
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   
   const [categoryFormData, setCategoryFormData] = useState({
-    name: '', description: '', image_url: '', parent_id: '',
+    name: '', 
+    description: '', 
+    parent_id: '',
   });
+  
+  // Separate state for selected image files
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
 
   useEffect(() => {
     loadCategories();
@@ -38,7 +43,8 @@ export function AdminCategoriesTab({ items, onCategoriesChange }: AdminCategorie
   };
 
   const resetCategoryForm = () => {
-    setCategoryFormData({ name: '', description: '', image_url: '', parent_id: '' });
+    setCategoryFormData({ name: '', description: '', parent_id: '' });
+    setSelectedImages([]);
     setShowAddCategoryForm(false);
     setEditingCategory(null);
   };
@@ -48,18 +54,37 @@ export function AdminCategoriesTab({ items, onCategoriesChange }: AdminCategorie
     setCategoryFormData({
       name: category.name,
       description: category.description || '',
-      image_url: category.image_url || '',
       parent_id: category.parent_id || '',
     });
+    setSelectedImages([]); // Reset images for editing
     setShowAddCategoryForm(true);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const fileArray = Array.from(files);
+      setSelectedImages(fileArray);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleCategorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // For now, we'll use placeholder URLs until the backend service is implemented
+    // In the next phase, this will be replaced with actual file upload to Google Drive
+    const placeholderImageUrls = selectedImages.map((file, index) => 
+      `https://placeholder-for-${file.name}-${index}`
+    ).join(', ');
+
     const submitData = {
       ...categoryFormData,
       parent_id: categoryFormData.parent_id || null,
+      image_url: placeholderImageUrls || '', // Will be replaced with actual Google Drive URLs
     };
 
     try {
@@ -76,6 +101,13 @@ export function AdminCategoriesTab({ items, onCategoriesChange }: AdminCategorie
       
       await loadCategories();
       resetCategoryForm();
+      
+      // TODO: In the next phase, implement actual file upload to Google Drive here
+      if (selectedImages.length > 0) {
+        console.log('Files to upload to Google Drive:', selectedImages);
+        console.log('Target folder: WebCatalog(DO NOT EDIT)/');
+        console.log('File names will be:', categoryFormData.name);
+      }
     } catch (error) {
       console.error('Error saving category:', error);
       alert('Error saving category. Please check your permissions and try again.');
@@ -245,7 +277,7 @@ export function AdminCategoriesTab({ items, onCategoriesChange }: AdminCategorie
       {/* Add/Edit Category Form Modal */}
       {showAddCategoryForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-screen overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">
                 {editingCategory ? 'Edit Category' : 'Add New Category'}
@@ -273,47 +305,86 @@ export function AdminCategoriesTab({ items, onCategoriesChange }: AdminCategorie
                 </p>
               </div>
 
-              {[
-                { label: 'Name', key: 'name', required: true, placeholder: 'e.g., Heavy Rings, Light Rings' },
-                { label: 'Description', key: 'description', type: 'textarea', placeholder: 'Brief description of the category' },
-              ].map(({ label, key, type = 'text', required, placeholder }) => (
-                <div key={key}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-                  {type === 'textarea' ? (
-                    <textarea
-                      value={categoryFormData[key as keyof typeof categoryFormData]}
-                      onChange={(e) => setCategoryFormData({ ...categoryFormData, [key]: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
-                      rows={3}
-                      placeholder={placeholder}
-                    />
-                  ) : (
-                    <input
-                      type={type}
-                      required={required}
-                      value={categoryFormData[key as keyof typeof categoryFormData]}
-                      onChange={(e) => setCategoryFormData({ ...categoryFormData, [key]: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
-                      placeholder={placeholder}
-                    />
-                  )}
-                </div>
-              ))}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={categoryFormData.name}
+                  onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
+                  placeholder="e.g., Heavy Rings, Light Rings"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  value={categoryFormData.description}
+                  onChange={(e) => setCategoryFormData({ ...categoryFormData, description: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
+                  rows={3}
+                  placeholder="Brief description of the category"
+                />
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Image URLs (comma separated)
+                  Category Images
                 </label>
-                <textarea
-                  value={categoryFormData.image_url}
-                  onChange={(e) => setCategoryFormData({ ...categoryFormData, image_url: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
-                  rows={3}
-                  placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Add multiple image URLs separated by commas for category slideshow.
-                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-center w-full">
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Upload className="w-8 h-8 mb-2 text-gray-500" />
+                        <p className="mb-2 text-sm text-gray-500">
+                          <span className="font-semibold">Click to upload</span> category images
+                        </p>
+                        <p className="text-xs text-gray-500">PNG, JPG, JPEG (MAX. 10MB each)</p>
+                      </div>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  {/* Display selected images */}
+                  {selectedImages.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-gray-700">Selected Images:</p>
+                      <div className="space-y-2 max-h-32 overflow-y-auto">
+                        {selectedImages.map((file, index) => (
+                          <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded-md">
+                            <div className="flex items-center space-x-2">
+                              <FileImage className="h-4 w-4 text-blue-500" />
+                              <span className="text-sm text-gray-700 truncate">{file.name}</span>
+                              <span className="text-xs text-gray-500">
+                                ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-500">
+                    Images will be uploaded to: <code>WebCatalog(DO NOT EDIT)/</code>
+                    <br />
+                    File names will be based on the category name.
+                  </p>
+                </div>
               </div>
 
               <div className="flex space-x-4 pt-4">

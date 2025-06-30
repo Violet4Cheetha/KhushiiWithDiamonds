@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, JewelryItem, Category } from '../../lib/supabase';
-import { Plus, Edit, Trash2, Save, X, Image, ChevronRight, ChevronDown, Folder, FolderOpen } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Image, ChevronRight, ChevronDown, Folder, FolderOpen, Upload, FileImage } from 'lucide-react';
 import { formatCurrency, calculateJewelryPriceSync } from '../../lib/goldPrice';
 
 interface AdminItemsTabProps {
@@ -17,10 +17,13 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   
   const [formData, setFormData] = useState({
-    name: '', description: '', category: '', images: '', gold_weight: 0,
+    name: '', description: '', category: '', gold_weight: 0,
     gold_quality: '22K', diamond_weight: 0, diamond_quality: '',
     diamond_cost_per_carat: 25000, making_charges_per_gram: 500, base_price: 0,
   });
+
+  // Separate state for selected image files
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
 
   useEffect(() => {
     loadItems();
@@ -41,10 +44,11 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
 
   const resetForm = () => {
     setFormData({
-      name: '', description: '', category: '', images: '', gold_weight: 0,
+      name: '', description: '', category: '', gold_weight: 0,
       gold_quality: '22K', diamond_weight: 0, diamond_quality: '',
       diamond_cost_per_carat: 25000, making_charges_per_gram: 500, base_price: 0,
     });
+    setSelectedImages([]);
     setShowAddForm(false);
     setEditingItem(null);
     setShowCategoryDropdown(false);
@@ -55,20 +59,53 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
     setEditingItem(item);
     setFormData({
       name: item.name, description: item.description, category: item.category,
-      images: item.images.join(', '), gold_weight: item.gold_weight,
-      gold_quality: item.gold_quality, diamond_weight: item.diamond_weight,
-      diamond_quality: item.diamond_quality, diamond_cost_per_carat: item.diamond_cost_per_carat,
+      gold_weight: item.gold_weight, gold_quality: item.gold_quality, 
+      diamond_weight: item.diamond_weight, diamond_quality: item.diamond_quality, 
+      diamond_cost_per_carat: item.diamond_cost_per_carat,
       making_charges_per_gram: item.making_charges_per_gram, base_price: item.base_price,
     });
+    setSelectedImages([]); // Reset images for editing
     setShowAddForm(true);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const fileArray = Array.from(files);
+      setSelectedImages(fileArray);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // For now, we'll use placeholder URLs until the backend service is implemented
+    // In the next phase, this will be replaced with actual file upload to Google Drive
+    const placeholderImageUrls = selectedImages.map((file, index) => 
+      `https://placeholder-for-${file.name}-${index}`
+    );
+
+    // Get category hierarchy for folder structure
+    const selectedCategory = categories.find(cat => cat.name === formData.category);
+    const parentCategory = selectedCategory?.parent_id 
+      ? categories.find(cat => cat.id === selectedCategory.parent_id)
+      : null;
+
+    // Prepare description with metadata
+    let enhancedDescription = formData.description;
+    if (selectedImages.length > 0) {
+      const imageMetadata = selectedImages.map(file => `name: ${file.name.split('.')[0]};`).join(' ');
+      enhancedDescription = formData.description + (formData.description ? ' ' : '') + imageMetadata;
+    }
+
     const itemData = {
       ...formData,
-      images: formData.images.split(',').map(img => img.trim()).filter(img => img),
+      description: enhancedDescription,
+      images: placeholderImageUrls, // Will be replaced with actual Google Drive URLs
     };
 
     try {
@@ -85,6 +122,17 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
       
       await loadItems();
       resetForm();
+
+      // TODO: In the next phase, implement actual file upload to Google Drive here
+      if (selectedImages.length > 0) {
+        console.log('Files to upload to Google Drive:', selectedImages);
+        const folderPath = parentCategory 
+          ? `WebCatalog(DO NOT EDIT)/${parentCategory.name}/${formData.category}`
+          : `WebCatalog(DO NOT EDIT)/${formData.category}`;
+        console.log('Target folder:', folderPath);
+        console.log('File names will be based on:', formData.name);
+        console.log('Description metadata:', enhancedDescription);
+      }
     } catch (error) {
       console.error('Error saving item:', error);
       alert('Error saving item. Please check your permissions and try again.');
@@ -321,45 +369,86 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {[
-                { label: 'Name', key: 'name', type: 'text', required: true },
-                { label: 'Description', key: 'description', type: 'textarea' },
-              ].map(({ label, key, type, required }) => (
-                <div key={key}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-                  {type === 'textarea' ? (
-                    <textarea
-                      value={formData[key as keyof typeof formData] as string}
-                      onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
-                      rows={3}
-                    />
-                  ) : (
-                    <input
-                      type={type}
-                      required={required}
-                      value={formData[key as keyof typeof formData] as string}
-                      onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
-                    />
-                  )}
-                </div>
-              ))}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
+                  rows={3}
+                />
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Images (URLs, comma separated)
+                  Jewelry Images
                 </label>
-                <textarea
-                  value={formData.images}
-                  onChange={(e) => setFormData({ ...formData, images: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
-                  rows={3}
-                  placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg, https://example.com/image3.jpg"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Add multiple image URLs separated by commas. Users can navigate through all images.
-                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-center w-full">
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Upload className="w-8 h-8 mb-2 text-gray-500" />
+                        <p className="mb-2 text-sm text-gray-500">
+                          <span className="font-semibold">Click to upload</span> jewelry images
+                        </p>
+                        <p className="text-xs text-gray-500">PNG, JPG, JPEG (MAX. 10MB each)</p>
+                      </div>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  {/* Display selected images */}
+                  {selectedImages.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-gray-700">Selected Images:</p>
+                      <div className="space-y-2 max-h-32 overflow-y-auto">
+                        {selectedImages.map((file, index) => (
+                          <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded-md">
+                            <div className="flex items-center space-x-2">
+                              <FileImage className="h-4 w-4 text-blue-500" />
+                              <span className="text-sm text-gray-700 truncate">{file.name}</span>
+                              <span className="text-xs text-gray-500">
+                                ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-500">
+                    Images will be uploaded to: <code>WebCatalog(DO NOT EDIT)/[category]/[subcategory]</code>
+                    <br />
+                    File names will be based on the jewelry item name.
+                    <br />
+                    Image metadata will be added to the description automatically.
+                  </p>
+                </div>
               </div>
 
               <div>
@@ -429,27 +518,51 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                {[
-                  { label: 'Diamond Weight (carats)', key: 'diamond_weight', step: '0.01' },
-                  { label: 'Diamond Quality', key: 'diamond_quality', type: 'text', placeholder: 'e.g., VS1, VVS, SI1' },
-                  { label: 'Diamond Cost per Carat (₹)', key: 'diamond_cost_per_carat', placeholder: '25000' },
-                  { label: 'Making Charges per Gram (₹)', key: 'making_charges_per_gram', placeholder: '500' },
-                ].map(({ label, key, step, type = 'number', placeholder }) => (
-                  <div key={key}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-                    <input
-                      type={type}
-                      step={step}
-                      value={formData[key as keyof typeof formData]}
-                      onChange={(e) => setFormData({ 
-                        ...formData, 
-                        [key]: type === 'number' ? (parseFloat(e.target.value) || 0) : e.target.value 
-                      })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
-                      placeholder={placeholder}
-                    />
-                  </div>
-                ))}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Diamond Weight (carats)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.diamond_weight}
+                    onChange={(e) => setFormData({ ...formData, diamond_weight: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Diamond Quality</label>
+                  <input
+                    type="text"
+                    value={formData.diamond_quality}
+                    onChange={(e) => setFormData({ ...formData, diamond_quality: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
+                    placeholder="e.g., VS1, VVS, SI1"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Diamond Cost per Carat (₹)</label>
+                  <input
+                    type="number"
+                    value={formData.diamond_cost_per_carat}
+                    onChange={(e) => setFormData({ ...formData, diamond_cost_per_carat: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
+                    placeholder="25000"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Making Charges per Gram (₹)</label>
+                  <input
+                    type="number"
+                    value={formData.making_charges_per_gram}
+                    onChange={(e) => setFormData({ ...formData, making_charges_per_gram: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
+                    placeholder="500"
+                  />
+                </div>
               </div>
 
               <div>
