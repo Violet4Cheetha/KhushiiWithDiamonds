@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { supabase, Category } from '../lib/supabase';
 import { CategoryCard } from '../components/CategoryCard';
 import { GoldPriceDisplay } from '../components/GoldPriceDisplay';
-import { DebugPanel } from '../components/DebugPanel';
 import { Sparkles } from 'lucide-react';
 
 export function HomePage() {
@@ -69,37 +68,7 @@ export function HomePage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="text-center max-w-2xl">
-          <div className="text-red-600 text-6xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Connection Error</h1>
-          <p className="text-gray-600 mb-6">{error}</p>
-          
-          <button
-            onClick={() => setShowDebug(!showDebug)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 mb-4"
-          >
-            {showDebug ? 'Hide' : 'Show'} Debug Info
-          </button>
-          
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 ml-2"
-          >
-            Retry
-          </button>
-
-          {showDebug && (
-            <div className="mt-6">
-              <DebugPanel />
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
+  
 
   return (
     <div className="space-y-12">
