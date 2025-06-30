@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, JewelryItem, Category } from '../../lib/supabase';
-import { Plus, Edit, Trash2, Save, X, Image, ChevronRight, ChevronDown, Folder, FolderOpen, Upload, FileImage } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Image, ChevronRight, ChevronDown, Folder, FolderOpen, Upload, FileImage, Loader } from 'lucide-react';
 import { formatCurrency, calculateJewelryPriceSync } from '../../lib/goldPrice';
+import { GoogleDriveUploadService } from '../../lib/googleDriveUpload';
 
 interface AdminItemsTabProps {
   categories: Category[];
@@ -15,6 +16,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
   const [editingItem, setEditingItem] = useState<JewelryItem | null>(null);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [uploading, setUploading] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '', description: '', category: '', gold_weight: 0,
@@ -53,6 +55,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
     setEditingItem(null);
     setShowCategoryDropdown(false);
     setExpandedCategories(new Set());
+    setUploading(false);
   };
 
   const startEdit = (item: JewelryItem) => {
@@ -82,33 +85,46 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setUploading(true);
     
-    // For now, we'll use placeholder URLs until the backend service is implemented
-    // In the next phase, this will be replaced with actual file upload to Google Drive
-    const placeholderImageUrls = selectedImages.map((file, index) => 
-      `https://placeholder-for-${file.name}-${index}`
-    );
-
-    // Get category hierarchy for folder structure
-    const selectedCategory = categories.find(cat => cat.name === formData.category);
-    const parentCategory = selectedCategory?.parent_id 
-      ? categories.find(cat => cat.id === selectedCategory.parent_id)
-      : null;
-
-    // Prepare description with metadata
-    let enhancedDescription = formData.description;
-    if (selectedImages.length > 0) {
-      const imageMetadata = selectedImages.map(file => `name: ${file.name.split('.')[0]};`).join(' ');
-      enhancedDescription = formData.description + (formData.description ? ' ' : '') + imageMetadata;
-    }
-
-    const itemData = {
-      ...formData,
-      description: enhancedDescription,
-      images: placeholderImageUrls, // Will be replaced with actual Google Drive URLs
-    };
-
     try {
+      let imageUrls: string[] = [];
+
+      // Upload images to Google Drive if any are selected
+      if (selectedImages.length > 0) {
+        try {
+          // Get category hierarchy for folder structure
+          const selectedCategory = categories.find(cat => cat.name === formData.category);
+          const parentCategory = selectedCategory?.parent_id 
+            ? categories.find(cat => cat.id === selectedCategory.parent_id)
+            : null;
+
+          imageUrls = await GoogleDriveUploadService.uploadJewelryImages(
+            selectedImages,
+            formData.name,
+            formData.category,
+            parentCategory?.name
+          );
+          console.log('Successfully uploaded jewelry images:', imageUrls);
+        } catch (uploadError) {
+          console.error('Image upload failed:', uploadError);
+          alert(`Image upload failed: ${uploadError.message}. The item will be saved without images.`);
+        }
+      }
+
+      // Prepare description with metadata
+      let enhancedDescription = formData.description;
+      if (selectedImages.length > 0) {
+        const imageMetadata = selectedImages.map(file => `name: ${file.name.split('.')[0]};`).join(' ');
+        enhancedDescription = formData.description + (formData.description ? ' ' : '') + imageMetadata;
+      }
+
+      const itemData = {
+        ...formData,
+        description: enhancedDescription,
+        images: imageUrls, // Use actual Google Drive URLs
+      };
+
       if (editingItem) {
         const { error } = await supabase
           .from('jewelry_items')
@@ -123,19 +139,11 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
       await loadItems();
       resetForm();
 
-      // TODO: In the next phase, implement actual file upload to Google Drive here
-      if (selectedImages.length > 0) {
-        console.log('Files to upload to Google Drive:', selectedImages);
-        const folderPath = parentCategory 
-          ? `WebCatalog(DO NOT EDIT)/${parentCategory.name}/${formData.category}`
-          : `WebCatalog(DO NOT EDIT)/${formData.category}`;
-        console.log('Target folder:', folderPath);
-        console.log('File names will be based on:', formData.name);
-        console.log('Description metadata:', enhancedDescription);
-      }
     } catch (error) {
       console.error('Error saving item:', error);
       alert('Error saving item. Please check your permissions and try again.');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -377,6 +385,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
+                  disabled={uploading}
                 />
               </div>
 
@@ -387,6 +396,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
                   rows={3}
+                  disabled={uploading}
                 />
               </div>
 
@@ -396,7 +406,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                 </label>
                 <div className="space-y-3">
                   <div className="flex items-center justify-center w-full">
-                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                    <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <Upload className="w-8 h-8 mb-2 text-gray-500" />
                         <p className="mb-2 text-sm text-gray-500">
@@ -410,6 +420,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                         accept="image/*"
                         onChange={handleImageChange}
                         className="hidden"
+                        disabled={uploading}
                       />
                     </label>
                   </div>
@@ -432,6 +443,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                               type="button"
                               onClick={() => removeImage(index)}
                               className="text-red-500 hover:text-red-700"
+                              disabled={uploading}
                             >
                               <X className="h-4 w-4" />
                             </button>
@@ -458,6 +470,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                     type="button"
                     onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500 text-left flex items-center justify-between bg-white"
+                    disabled={uploading}
                   >
                     <span className={formData.category ? 'text-gray-900' : 'text-gray-500'}>
                       {formData.category || 'Select Category'}
@@ -500,6 +513,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                     value={formData.gold_weight}
                     onChange={(e) => setFormData({ ...formData, gold_weight: parseFloat(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
+                    disabled={uploading}
                   />
                 </div>
 
@@ -509,6 +523,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                     value={formData.gold_quality}
                     onChange={(e) => setFormData({ ...formData, gold_quality: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
+                    disabled={uploading}
                   >
                     {['18K', '22K', '24K', '14K'].map(quality => (
                       <option key={quality} value={quality}>{quality}</option>
@@ -526,6 +541,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                     value={formData.diamond_weight}
                     onChange={(e) => setFormData({ ...formData, diamond_weight: parseFloat(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
+                    disabled={uploading}
                   />
                 </div>
 
@@ -537,6 +553,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                     onChange={(e) => setFormData({ ...formData, diamond_quality: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
                     placeholder="e.g., VS1, VVS, SI1"
+                    disabled={uploading}
                   />
                 </div>
               </div>
@@ -550,6 +567,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                     onChange={(e) => setFormData({ ...formData, diamond_cost_per_carat: parseFloat(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
                     placeholder="25000"
+                    disabled={uploading}
                   />
                 </div>
 
@@ -561,6 +579,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                     onChange={(e) => setFormData({ ...formData, making_charges_per_gram: parseFloat(e.target.value) || 0 })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
                     placeholder="500"
+                    disabled={uploading}
                   />
                 </div>
               </div>
@@ -575,6 +594,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                   onChange={(e) => setFormData({ ...formData, base_price: parseFloat(e.target.value) || 0 })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
                   placeholder="Design complexity, additional stones, etc."
+                  disabled={uploading}
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   *Additional costs like design complexity, other stones, etc. (Gold, diamond, and making charges calculated separately)
@@ -600,15 +620,26 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
               <div className="flex space-x-4 pt-4">
                 <button
                   type="submit"
-                  className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 flex items-center space-x-2"
+                  disabled={uploading}
+                  className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Save className="h-4 w-4" />
-                  <span>{editingItem ? 'Update' : 'Add'} Item</span>
+                  {uploading ? (
+                    <>
+                      <Loader className="h-4 w-4 animate-spin" />
+                      <span>Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      <span>{editingItem ? 'Update' : 'Add'} Item</span>
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                  disabled={uploading}
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>

@@ -34,6 +34,10 @@ class GoogleDriveService {
     this.clientId = '940999814795-pt1k5s5f6f0kr1otsv66ch898goputkc.apps.googleusercontent.com'
     this.clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET') || ''
     this.refreshToken = Deno.env.get('GOOGLE_REFRESH_TOKEN') || ''
+    
+    if (!this.clientSecret || !this.refreshToken) {
+      throw new Error('Missing required Google Drive credentials in environment variables')
+    }
   }
 
   async getAccessToken(): Promise<string> {
@@ -55,7 +59,8 @@ class GoogleDriveService {
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to get access token: ${response.statusText}`)
+      const errorText = await response.text()
+      throw new Error(`Failed to get access token: ${response.status} ${response.statusText} - ${errorText}`)
     }
 
     const data = await response.json()
@@ -65,24 +70,23 @@ class GoogleDriveService {
 
   async findOrCreateFolder(folderPath: string): Promise<string> {
     const accessToken = await this.getAccessToken()
-    const pathParts = folderPath.split('/')
+    const pathParts = folderPath.split('/').filter(part => part.trim())
     let currentFolderId = 'root'
 
     for (const folderName of pathParts) {
-      if (!folderName.trim()) continue
-
       // Search for existing folder
-      const searchResponse = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q=name='${encodeURIComponent(folderName)}' and parents in '${currentFolderId}' and mimeType='application/vnd.google-apps.folder'&fields=files(id,name)`,
-        {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-          },
-        }
-      )
+      const searchQuery = `name='${folderName.replace(/'/g, "\\'")}' and parents in '${currentFolderId}' and mimeType='application/vnd.google-apps.folder' and trashed=false`
+      const searchUrl = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(searchQuery)}&fields=files(id,name)`
+      
+      const searchResponse = await fetch(searchUrl, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      })
 
       if (!searchResponse.ok) {
-        throw new Error(`Failed to search for folder: ${searchResponse.statusText}`)
+        const errorText = await searchResponse.text()
+        throw new Error(`Failed to search for folder "${folderName}": ${searchResponse.status} ${searchResponse.statusText} - ${errorText}`)
       }
 
       const searchData = await searchResponse.json()
@@ -106,7 +110,8 @@ class GoogleDriveService {
         })
 
         if (!createResponse.ok) {
-          throw new Error(`Failed to create folder: ${createResponse.statusText}`)
+          const errorText = await createResponse.text()
+          throw new Error(`Failed to create folder "${folderName}": ${createResponse.status} ${createResponse.statusText} - ${errorText}`)
         }
 
         const createData = await createResponse.json()
@@ -124,9 +129,6 @@ class GoogleDriveService {
     folderId: string
   ): Promise<GoogleDriveFile> {
     const accessToken = await this.getAccessToken()
-
-    // Convert base64 to binary
-    const binaryData = Uint8Array.from(atob(fileData), c => c.charCodeAt(0))
 
     // Create multipart upload
     const boundary = '-------314159265358979323846'
@@ -161,7 +163,8 @@ class GoogleDriveService {
     )
 
     if (!response.ok) {
-      throw new Error(`Failed to upload file: ${response.statusText}`)
+      const errorText = await response.text()
+      throw new Error(`Failed to upload file "${fileName}": ${response.status} ${response.statusText} - ${errorText}`)
     }
 
     return await response.json()
@@ -186,7 +189,8 @@ class GoogleDriveService {
     )
 
     if (!response.ok) {
-      throw new Error(`Failed to make file public: ${response.statusText}`)
+      const errorText = await response.text()
+      throw new Error(`Failed to make file public: ${response.status} ${response.statusText} - ${errorText}`)
     }
   }
 
@@ -224,10 +228,25 @@ serve(async (req) => {
       )
     }
 
+    if (!uploadRequest.folderPath || !uploadRequest.itemName) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required fields: folderPath and itemName' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    console.log(`Starting upload for ${uploadRequest.itemType}: ${uploadRequest.itemName}`)
+    console.log(`Target folder: ${uploadRequest.folderPath}`)
+    console.log(`Number of files: ${uploadRequest.files.length}`)
+
     const driveService = new GoogleDriveService()
     
     // Find or create the target folder
     const folderId = await driveService.findOrCreateFolder(uploadRequest.folderPath)
+    console.log(`Target folder ID: ${folderId}`)
     
     const uploadedFiles: Array<{
       originalName: string
@@ -247,6 +266,8 @@ serve(async (req) => {
         ? `${uploadRequest.itemName}.${fileExtension}`
         : `${uploadRequest.itemName}_${i + 1}.${fileExtension}`
 
+      console.log(`Uploading file ${i + 1}/${uploadRequest.files.length}: ${fileName}`)
+
       // Upload file to Google Drive
       const driveFile = await driveService.uploadFile(
         fileName,
@@ -255,8 +276,11 @@ serve(async (req) => {
         folderId
       )
 
+      console.log(`File uploaded with ID: ${driveFile.id}`)
+
       // Make file publicly accessible
       await driveService.makeFilePublic(driveFile.id)
+      console.log(`File made public: ${driveFile.id}`)
 
       // Get direct image URL
       const directUrl = driveService.getDirectImageUrl(driveFile.id)
@@ -269,6 +293,8 @@ serve(async (req) => {
         webViewLink: driveFile.webViewLink,
       })
     }
+
+    console.log(`Successfully uploaded ${uploadedFiles.length} files`)
 
     return new Response(
       JSON.stringify({

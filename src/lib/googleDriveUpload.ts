@@ -79,17 +79,38 @@ export class GoogleDriveUploadService {
         throw new Error('No files provided for upload')
       }
 
+      // Validate file sizes (max 10MB each)
+      for (const file of files) {
+        if (file.size > 10 * 1024 * 1024) {
+          throw new Error(`File "${file.name}" is too large. Maximum size is 10MB.`)
+        }
+      }
+
+      // Validate file types
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+      for (const file of files) {
+        if (!allowedTypes.includes(file.type)) {
+          throw new Error(`File "${file.name}" has unsupported type. Only images are allowed.`)
+        }
+      }
+
+      console.log(`Starting upload process for ${files.length} files`)
+
       // Convert files to base64
       const uploadFiles: UploadFile[] = await Promise.all(
-        files.map(async (file) => ({
-          name: file.name,
-          data: await this.fileToBase64(file),
-          mimeType: file.type,
-        }))
+        files.map(async (file) => {
+          console.log(`Converting ${file.name} to base64...`)
+          return {
+            name: file.name,
+            data: await this.fileToBase64(file),
+            mimeType: file.type,
+          }
+        })
       )
 
       // Determine folder path
       const folderPath = this.getFolderPath(itemType, category, parentCategory)
+      console.log(`Target folder path: ${folderPath}`)
 
       // Prepare request payload
       const requestPayload = {
@@ -98,6 +119,8 @@ export class GoogleDriveUploadService {
         itemName,
         itemType,
       }
+
+      console.log(`Calling edge function: ${this.EDGE_FUNCTION_URL}`)
 
       // Call the edge function
       const response = await fetch(this.EDGE_FUNCTION_URL, {
@@ -120,6 +143,7 @@ export class GoogleDriveUploadService {
         throw new Error(result.error || 'Upload failed')
       }
 
+      console.log(`Upload successful! ${result.files.length} files uploaded.`)
       return result
 
     } catch (error) {
