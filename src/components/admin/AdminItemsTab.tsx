@@ -115,8 +115,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
 
   const CategoryOption = ({ category, level = 0 }: { category: Category; level?: number }) => {
     const subcategories = getSubcategories(category.id);
-    const indent = '  '.repeat(level);
-    const prefix = level === 0 ? '📁 ' : level === 1 ? '  └─ ' : '    └─ ';
+    const prefix = level === 0 ? '' : '  > ';
     
     return (
       <>
@@ -307,10 +306,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category
-                  <span className="text-xs text-gray-500 ml-2">(📁 = Main Category, └─ = Subcategory)</span>
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                 <select
                   required
                   value={formData.category}
@@ -323,9 +319,6 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                     <CategoryOption key={cat.id} category={cat} />
                   ))}
                 </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  Choose from main categories or their subcategories. Subcategories are indented and marked with └─
-                </p>
                 
                 {/* Category Preview */}
                 {formData.category && (
