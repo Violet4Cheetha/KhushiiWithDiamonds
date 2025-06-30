@@ -131,10 +131,6 @@ export function CategoryPage() {
       {subcategories.length > 0 && (
         <div className="mb-6">
           <div className="bg-white rounded-lg shadow-md p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-              <Folder className="h-5 w-5 mr-2 text-blue-600" />
-              Browse by Subcategory
-            </h3>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setSelectedSubcategory('all')}
