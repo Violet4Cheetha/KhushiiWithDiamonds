@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { supabase, Category } from '../lib/supabase';
 import { CategoryCard } from '../components/CategoryCard';
 import { GoldPriceDisplay } from '../components/GoldPriceDisplay';
-import { DebugPanel } from '../components/DebugPanel';
 import { Sparkles } from 'lucide-react';
 
 export function HomePage() {
