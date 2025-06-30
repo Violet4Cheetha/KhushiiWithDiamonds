@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Cem, Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { Gem, Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
 import { supabase, Category } from '../lib/supabase';
 
 interface LayoutProps {
