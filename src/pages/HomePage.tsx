@@ -88,7 +88,7 @@ export function HomePage() {
       <section className="relative h-96 bg-gradient-to-r from-orange-900 via-red-900 to-yellow-900 flex items-center justify-center">
         <div className="absolute inset-0 bg-black opacity-40"></div>
         <div className="relative text-center text-white z-10">
-          <!--<h1 className="text-5xl font-bold mb-4">Khushii With Diamond</h1>--> 
+          // <h1 className="text-5xl font-bold mb-4">Khushii With Diamond</h1>
         </div>
       </section>
 
