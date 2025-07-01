@@ -167,16 +167,9 @@ export function JewelryForm({
         }
       }
 
-           // Prepare description with metadataAdd commentMore actions
-      let enhancedDescription = formData.description;
-      if (selectedImages.length > 0) {
-        const imageMetadata = selectedImages.map(file => `name: ${file.name.split('.')[0]};`).join(' ');
-        enhancedDescription = formData.description + (formData.description ? ' ' : '') + imageMetadata;
-      }
-
       const itemData = {
         ...formData,
-        description: enhancedDescription,
+        description: formData.description,
       };
 
       await onSubmit(itemData, imageUrls);
@@ -250,7 +243,7 @@ export function JewelryForm({
                   </label>
                 </div>
 
-                {/* Display selected images */}
+                {/* Display selected images  */}
                 {selectedImages.length > 0 && (
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-gray-700">Selected Images:</p>
