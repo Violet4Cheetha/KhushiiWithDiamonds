@@ -243,7 +243,7 @@ export function JewelryForm({
                   </label>
                 </div>
 
-                {/* Display selected images */}
+                {/* Display selected images  */}
                 {selectedImages.length > 0 && (
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-gray-700">Selected Images:</p>
