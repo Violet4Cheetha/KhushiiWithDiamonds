@@ -42,8 +42,9 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
     setShowAddForm(true);
   };
 
-  const handleSubmit = async (imageUrls: string[]) => {
+  const handleSubmit = async (itemData: any, imageUrls: string[]) => {
     const finalItemData = {
+      ...itemData,
       images: imageUrls, // Use actual Google Drive URLs
     };
 
