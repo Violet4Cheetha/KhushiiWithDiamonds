@@ -167,17 +167,7 @@ export function JewelryForm({
         }
       }
 
-      // Prepare description with metadata
-      let enhancedDescription = formData.description;
-      if (selectedImages.length > 0) {
-        const imageMetadata = selectedImages.map(file => `name: ${file.name.split('.')[0]};`).join(' ');
-        enhancedDescription = formData.description + (formData.description ? ' ' : '') + imageMetadata;
-      }
 
-      const itemData = {
-        ...formData,
-        description: enhancedDescription,
-      };
 
       await onSubmit(itemData, imageUrls);
     } catch (error) {
