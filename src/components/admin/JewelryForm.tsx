@@ -167,6 +167,27 @@ export function JewelryForm({
         }
       }
 
+           // Prepare description with metadataAdd commentMore actions
+      let enhancedDescription = formData.description;
+      if (selectedImages.length > 0) {
+        const imageMetadata = selectedImages.map(file => `name: ${file.name.split('.')[0]};`).join(' ');
+        enhancedDescription = formData.description + (formData.description ? ' ' : '') + imageMetadata;
+      }
+
+      const itemData = {
+        ...formData,
+        description: enhancedDescription,
+      };
+
+      await onSubmit(itemData, imageUrls);
+    } catch (error) {
+      console.error('Error saving item:', error);
+      alert('Error saving item. Please check your permissions and try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
