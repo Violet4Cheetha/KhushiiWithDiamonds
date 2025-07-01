@@ -275,8 +275,6 @@ export function JewelryForm({
                   Images will be uploaded to: <code>WebCatalog(DO NOT EDIT)/[category]/[subcategory]</code>
                   <br />
                   File names will be based on the jewelry item name.
-                  <br />
-                  Image metadata will be added to the description automatically.
                 </p>
               </div>
             </div>
