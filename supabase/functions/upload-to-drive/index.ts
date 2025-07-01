@@ -31,7 +31,7 @@ class GoogleDriveService {
   private accessToken: string | null = null
 
   constructor() {
-    this.clientId = '940999814795-pt1k5s5f6f0kr1otsv66ch898goputkc.apps.googleusercontent.com'
+    this.clientId = '718944829391-bv6m3ueebpfhl87f6otoh0es0mb5jbps.apps.googleusercontent.com'
     this.clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET') || ''
     this.refreshToken = Deno.env.get('GOOGLE_REFRESH_TOKEN') || ''
     
