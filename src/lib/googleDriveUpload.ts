@@ -21,7 +21,7 @@ interface UploadResponse {
 }
 
 export class GoogleDriveUploadService {
-  private static readonly EDGE_FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-to-drive`
+  private static readonly EDGE_FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_DATABASE_URL}/functions/v1/upload-to-drive`
 
   /**
    * Convert File objects to base64 encoded data
