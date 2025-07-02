@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, JewelryItem, Category } from '../../lib/supabase';
-import { Plus, Edit, Trash2, Image, ChevronRight } from 'lucide-react';
-import { formatCurrency, calculateJewelryPriceSync } from '../../lib/goldPrice';
+import { Plus, Edit, Trash2, Image, ChevronRight, Gem } from 'lucide-react';
+import { formatCurrency, calculateJewelryPriceSync, getTotalDiamondWeight, formatDiamondSummary } from '../../lib/goldPrice';
 import { JewelryForm } from './JewelryForm';
 
 interface AdminItemsTabProps {
@@ -77,10 +77,20 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
   };
 
   const calculateTotalCost = (item: JewelryItem): number => {
+    // Use new diamonds array if available, otherwise fall back to legacy fields
+    const diamonds = item.diamonds?.length > 0 
+      ? item.diamonds 
+      : item.diamond_weight > 0 
+        ? [{
+            carat: item.diamond_weight,
+            quality: item.diamond_quality || '',
+            cost_per_carat: item.diamond_cost_per_carat || 0
+          }]
+        : [];
+
     return calculateJewelryPriceSync(
       item.base_price, item.gold_weight, item.gold_quality,
-      item.diamond_weight, item.diamond_cost_per_carat,
-      item.making_charges_per_gram, goldPrice, gstRate
+      diamonds, item.making_charges_per_gram, goldPrice, gstRate
     );
   };
 
@@ -114,7 +124,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {['Item', 'Category', 'Images', 'Specifications', 'Cost Components (₹)', 'Total Cost (₹)', 'Actions'].map(header => (
+                {['Item', 'Category', 'Images', 'Specifications', 'Diamonds', 'Cost Components (₹)', 'Total Cost (₹)', 'Actions'].map(header => (
                   <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {header}
                   </th>
@@ -125,6 +135,19 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
               {items.map((item) => {
                 const totalCost = calculateTotalCost(item);
                 const categoryDisplay = getCategoryDisplayName(item.category);
+                
+                // Use new diamonds array if available, otherwise fall back to legacy fields
+                const diamonds = item.diamonds?.length > 0 
+                  ? item.diamonds 
+                  : item.diamond_weight > 0 
+                    ? [{
+                        carat: item.diamond_weight,
+                        quality: item.diamond_quality || '',
+                        cost_per_carat: item.diamond_cost_per_carat || 0
+                      }]
+                    : [];
+
+                const totalDiamondWeight = getTotalDiamondWeight(diamonds);
                 
                 return (
                   <tr key={item.id} className="hover:bg-gray-50">
@@ -162,15 +185,29 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div>Gold: {item.gold_weight}g ({item.gold_quality})</div>
-                      {item.diamond_weight > 0 && (
-                        <div>Diamond: {item.diamond_weight}ct {item.diamond_quality}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {diamonds.length > 0 ? (
+                        <div className="flex items-center space-x-1">
+                          <Gem className="h-4 w-4 text-blue-500" />
+                          <div>
+                            <div className="font-medium">{formatDiamondSummary(diamonds)}</div>
+                            {diamonds.length > 1 && (
+                              <div className="text-xs text-gray-500">
+                                {diamonds.map((d, i) => `${d.carat}ct`).join(', ')}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">No diamonds</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div className="space-y-1">
                         <div>Making: {formatCurrency(item.making_charges_per_gram)}/g</div>
-                        {item.diamond_weight > 0 && (
-                          <div>Diamond: {formatCurrency(item.diamond_cost_per_carat)}/ct</div>
+                        {totalDiamondWeight > 0 && (
+                          <div>Diamonds: {diamonds.length} stone{diamonds.length > 1 ? 's' : ''}</div>
                         )}
                         <div>Base: {formatCurrency(item.base_price)}</div>
                       </div>

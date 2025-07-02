@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { JewelryItem, Category } from '../../lib/supabase';
-import { Save, X, Upload, FileImage, Loader, ChevronDown, ChevronRight, Folder } from 'lucide-react';
+import { JewelryItem, Category, Diamond } from '../../lib/supabase';
+import { Save, X, Upload, FileImage, Loader, ChevronDown, ChevronRight, Folder, Plus, Trash2, Gem } from 'lucide-react';
 import { formatCurrency, calculateJewelryPriceSync } from '../../lib/goldPrice';
 import { GoogleDriveUploadService } from '../../lib/googleDriveUpload';
 
@@ -25,19 +25,28 @@ export function JewelryForm({
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   
+  // Initialize diamonds from editing item or create empty array
+  const initialDiamonds: Diamond[] = editingItem?.diamonds?.length > 0 
+    ? editingItem.diamonds 
+    : editingItem?.diamond_weight > 0 
+      ? [{
+          carat: editingItem.diamond_weight,
+          quality: editingItem.diamond_quality || '',
+          cost_per_carat: editingItem.diamond_cost_per_carat || 25000
+        }]
+      : [];
+
   const [formData, setFormData] = useState({
     name: editingItem?.name || '', 
     description: editingItem?.description || '', 
     category: editingItem?.category || '', 
     gold_weight: editingItem?.gold_weight || 0,
     gold_quality: editingItem?.gold_quality || '22K', 
-    diamond_weight: editingItem?.diamond_weight || 0, 
-    diamond_quality: editingItem?.diamond_quality || '',
-    diamond_cost_per_carat: editingItem?.diamond_cost_per_carat || 25000, 
     making_charges_per_gram: editingItem?.making_charges_per_gram || 500, 
     base_price: editingItem?.base_price || 0,
   });
 
+  const [diamonds, setDiamonds] = useState<Diamond[]>(initialDiamonds);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
 
   // Organize categories for expandable dropdown
@@ -126,6 +135,22 @@ export function JewelryForm({
     );
   };
 
+  // Diamond management functions
+  const addDiamond = () => {
+    setDiamonds([...diamonds, { carat: 0, quality: '', cost_per_carat: 25000 }]);
+  };
+
+  const updateDiamond = (index: number, field: keyof Diamond, value: string | number) => {
+    const updatedDiamonds = diamonds.map((diamond, i) => 
+      i === index ? { ...diamond, [field]: value } : diamond
+    );
+    setDiamonds(updatedDiamonds);
+  };
+
+  const removeDiamond = (index: number) => {
+    setDiamonds(diamonds.filter((_, i) => i !== index));
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
@@ -169,6 +194,7 @@ export function JewelryForm({
 
       const itemData = {
         ...formData,
+        diamonds: diamonds.filter(d => d.carat > 0), // Only include diamonds with weight
         description: formData.description,
       };
 
@@ -181,10 +207,14 @@ export function JewelryForm({
     }
   };
 
+  // Calculate total diamond weight and cost for preview
+  const totalDiamondWeight = diamonds.reduce((sum, d) => sum + d.carat, 0);
+  const totalDiamondCost = diamonds.reduce((sum, d) => sum + (d.carat * d.cost_per_carat), 0);
+
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-screen overflow-y-auto">
+        <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-screen overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">
               {editingItem ? 'Edit Item' : 'Add New Item'}
@@ -194,17 +224,60 @@ export function JewelryForm({
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-              <input
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
-                disabled={uploading}
-              />
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
+                  disabled={uploading}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500 text-left flex items-center justify-between bg-white"
+                    disabled={uploading}
+                  >
+                    <span className={formData.category ? 'text-gray-900' : 'text-gray-500'}>
+                      {formData.category || 'Select Category'}
+                    </span>
+                    <ChevronDown className={`h-4 w-4 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {showCategoryDropdown && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                      <div className="py-1">
+                        {topLevelCategories.map((category) => (
+                          <CategoryMenuItem key={category.id} category={category} />
+                        ))}
+                        {topLevelCategories.length === 0 && (
+                          <div className="px-4 py-2 text-sm text-gray-500">
+                            No categories available
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Category Preview */}
+                {formData.category && (
+                  <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                    <p className="text-sm text-blue-800">
+                      <strong>Selected:</strong> {getCategoryDisplayName(formData.category)}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div>
@@ -218,6 +291,7 @@ export function JewelryForm({
               />
             </div>
 
+            {/* Images Section */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Jewelry Images
@@ -270,134 +344,152 @@ export function JewelryForm({
                     </div>
                   </div>
                 )}
-
-                <p className="text-xs text-gray-500">
-                  Images will be uploaded to: <code>WebCatalog(DO NOT EDIT)/[category]/[subcategory]</code>
-                  <br />
-                  File names will be based on the jewelry item name.
-                </p>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-              <div className="relative">
+            {/* Gold Section */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-yellow-800 mb-3 flex items-center">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
+                Gold Specifications
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Gold Weight (grams)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={formData.gold_weight}
+                    onChange={(e) => setFormData({ ...formData, gold_weight: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
+                    disabled={uploading}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Gold Quality</label>
+                  <select
+                    value={formData.gold_quality}
+                    onChange={(e) => setFormData({ ...formData, gold_quality: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
+                    disabled={uploading}
+                  >
+                    {['18K', '22K', '24K', '14K'].map(quality => (
+                      <option key={quality} value={quality}>{quality}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Making Charges per Gram (₹)</label>
+                  <input
+                    type="number"
+                    value={formData.making_charges_per_gram}
+                    onChange={(e) => setFormData({ ...formData, making_charges_per_gram: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
+                    placeholder="500"
+                    disabled={uploading}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Diamonds Section */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-lg font-semibold text-blue-800 flex items-center">
+                  <Gem className="h-5 w-5 mr-2" />
+                  Diamonds ({diamonds.length})
+                </h3>
                 <button
                   type="button"
-                  onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500 text-left flex items-center justify-between bg-white"
+                  onClick={addDiamond}
+                  className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 flex items-center space-x-1 text-sm"
                   disabled={uploading}
                 >
-                  <span className={formData.category ? 'text-gray-900' : 'text-gray-500'}>
-                    {formData.category || 'Select Category'}
-                  </span>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+                  <Plus className="h-4 w-4" />
+                  <span>Add Diamond</span>
                 </button>
+              </div>
 
-                {showCategoryDropdown && (
-                  <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                    <div className="py-1">
-                      {topLevelCategories.map((category) => (
-                        <CategoryMenuItem key={category.id} category={category} />
-                      ))}
-                      {topLevelCategories.length === 0 && (
-                        <div className="px-4 py-2 text-sm text-gray-500">
-                          No categories available
+              {diamonds.length === 0 ? (
+                <div className="text-center py-4 text-gray-500">
+                  <Gem className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                  <p>No diamonds added. Click "Add Diamond" to include diamonds in this jewelry item.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {diamonds.map((diamond, index) => (
+                    <div key={index} className="bg-white border border-blue-200 rounded-md p-3">
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="font-medium text-blue-800">Diamond {index + 1}</h4>
+                        <button
+                          type="button"
+                          onClick={() => removeDiamond(index)}
+                          className="text-red-500 hover:text-red-700"
+                          disabled={uploading}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Carat Weight</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={diamond.carat}
+                            onChange={(e) => updateDiamond(index, 'carat', parseFloat(e.target.value) || 0)}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500"
+                            placeholder="0.50"
+                            disabled={uploading}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Quality</label>
+                          <input
+                            type="text"
+                            value={diamond.quality}
+                            onChange={(e) => updateDiamond(index, 'quality', e.target.value)}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500"
+                            placeholder="VS1, VVS, SI1"
+                            disabled={uploading}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Cost per Carat (₹)</label>
+                          <input
+                            type="number"
+                            value={diamond.cost_per_carat}
+                            onChange={(e) => updateDiamond(index, 'cost_per_carat', parseFloat(e.target.value) || 0)}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500"
+                            placeholder="25000"
+                            disabled={uploading}
+                          />
+                        </div>
+                      </div>
+                      {diamond.carat > 0 && (
+                        <div className="mt-2 text-xs text-blue-600">
+                          Total cost: {formatCurrency(diamond.carat * diamond.cost_per_carat)}
                         </div>
                       )}
                     </div>
-                  </div>
-                )}
-              </div>
-              
-              {/* Category Preview */}
-              {formData.category && (
-                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
-                  <p className="text-sm text-blue-800">
-                    <strong>Selected:</strong> {getCategoryDisplayName(formData.category)}
-                  </p>
+                  ))}
+                  
+                  {totalDiamondWeight > 0 && (
+                    <div className="bg-blue-100 border border-blue-300 rounded-md p-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium text-blue-800">Total Diamond Weight:</span>
+                        <span className="text-blue-700">{totalDiamondWeight.toFixed(2)} carats</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium text-blue-800">Total Diamond Cost:</span>
+                        <span className="text-blue-700">{formatCurrency(totalDiamondCost)}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Gold Weight (grams)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={formData.gold_weight}
-                  onChange={(e) => setFormData({ ...formData, gold_weight: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
-                  disabled={uploading}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Gold Quality</label>
-                <select
-                  value={formData.gold_quality}
-                  onChange={(e) => setFormData({ ...formData, gold_quality: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
-                  disabled={uploading}
-                >
-                  {['18K', '22K', '24K', '14K'].map(quality => (
-                    <option key={quality} value={quality}>{quality}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Diamond Weight (carats)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.diamond_weight}
-                  onChange={(e) => setFormData({ ...formData, diamond_weight: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
-                  disabled={uploading}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Diamond Quality</label>
-                <input
-                  type="text"
-                  value={formData.diamond_quality}
-                  onChange={(e) => setFormData({ ...formData, diamond_quality: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
-                  placeholder="e.g., VS1, VVS, SI1"
-                  disabled={uploading}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Diamond Cost per Carat (₹)</label>
-                <input
-                  type="number"
-                  value={formData.diamond_cost_per_carat}
-                  onChange={(e) => setFormData({ ...formData, diamond_cost_per_carat: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
-                  placeholder="25000"
-                  disabled={uploading}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Making Charges per Gram (₹)</label>
-                <input
-                  type="number"
-                  value={formData.making_charges_per_gram}
-                  onChange={(e) => setFormData({ ...formData, making_charges_per_gram: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
-                  placeholder="500"
-                  disabled={uploading}
-                />
-              </div>
             </div>
 
             <div>
@@ -417,19 +509,23 @@ export function JewelryForm({
               </p>
             </div>
 
-            {(formData.gold_weight > 0 || formData.base_price > 0) && (
+            {(formData.gold_weight > 0 || formData.base_price > 0 || totalDiamondWeight > 0) && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <h4 className="text-sm font-medium text-green-800 mb-2">Live Price Preview</h4>
                 <div className="text-2xl font-bold text-green-600">
                   {formatCurrency(calculateJewelryPriceSync(
                     formData.base_price, formData.gold_weight, formData.gold_quality,
-                    formData.diamond_weight, formData.diamond_cost_per_carat,
-                    formData.making_charges_per_gram, goldPrice, gstRate
+                    diamonds, formData.making_charges_per_gram, goldPrice, gstRate
                   ))}
                 </div>
                 <p className="text-xs text-green-600 mt-1">
                   *Including live gold price ({formatCurrency(goldPrice)}/gram) + GST ({Math.round(gstRate * 100)}%)
                 </p>
+                {totalDiamondWeight > 0 && (
+                  <p className="text-xs text-green-600">
+                    *Including {diamonds.length} diamond{diamonds.length > 1 ? 's' : ''} ({totalDiamondWeight.toFixed(2)} total carats)
+                  </p>
+                )}
               </div>
             )}
 

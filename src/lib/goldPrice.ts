@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase, Diamond } from './supabase';
 
 const GOLD_API_KEY = import.meta.env.VITE_GOLD_API_KEY || '9886e90c5c52f1a75a3ca50daccd91d4';
 const GOLD_API_URL = `https://api.metalpriceapi.com/v1/latest?api_key=${GOLD_API_KEY}&base=INR&currencies=XAU`;
@@ -76,7 +76,32 @@ const purityMultipliers = {
   '10K': 0.417, '14K': 0.583, '18K': 0.750, '22K': 0.917, '24K': 1.000
 };
 
+// Updated function to handle multiple diamonds
 export const calculateJewelryPriceSync = (
+  basePrice: number,
+  goldWeight: number,
+  goldQuality: string,
+  diamonds: Diamond[],
+  makingChargesPerGram: number,
+  goldPricePerGram: number,
+  gstRate: number = 0.18
+): number => {
+  const purity = purityMultipliers[goldQuality as keyof typeof purityMultipliers] || 0.583;
+  const goldValue = goldWeight * goldPricePerGram * purity;
+  
+  // Calculate total diamond cost from multiple diamonds
+  const totalDiamondCost = diamonds.reduce((total, diamond) => {
+    return total + (diamond.carat * diamond.cost_per_carat);
+  }, 0);
+  
+  const makingCharges = goldWeight * makingChargesPerGram;
+  const subtotal = goldValue + totalDiamondCost + makingCharges + basePrice;
+  
+  return subtotal * (1 + gstRate);
+};
+
+// Legacy function for backward compatibility
+export const calculateJewelryPriceSyncLegacy = (
   basePrice: number,
   goldWeight: number,
   goldQuality: string,
@@ -86,13 +111,16 @@ export const calculateJewelryPriceSync = (
   goldPricePerGram: number,
   gstRate: number = 0.18
 ): number => {
-  const purity = purityMultipliers[goldQuality as keyof typeof purityMultipliers] || 0.583;
-  const goldValue = goldWeight * goldPricePerGram * purity;
-  const diamondCost = diamondWeight * diamondCostPerCarat;
-  const makingCharges = goldWeight * makingChargesPerGram;
-  const subtotal = goldValue + diamondCost + makingCharges + basePrice;
+  const diamonds: Diamond[] = diamondWeight > 0 ? [{
+    carat: diamondWeight,
+    quality: '',
+    cost_per_carat: diamondCostPerCarat
+  }] : [];
   
-  return subtotal * (1 + gstRate);
+  return calculateJewelryPriceSync(
+    basePrice, goldWeight, goldQuality, diamonds, 
+    makingChargesPerGram, goldPricePerGram, gstRate
+  );
 };
 
 export const formatCurrency = (amount: number): string => 
@@ -109,18 +137,47 @@ export const getPriceBreakdown = (
   basePrice: number,
   goldWeight: number,
   goldQuality: string,
-  diamondWeight: number,
-  diamondCostPerCarat: number,
+  diamonds: Diamond[],
   makingChargesPerGram: number,
   goldPricePerGram: number,
   gstRate: number = 0.18
 ) => {
   const purity = purityMultipliers[goldQuality as keyof typeof purityMultipliers] || 0.583;
   const goldValue = goldWeight * goldPricePerGram * purity;
-  const diamondCost = diamondWeight * diamondCostPerCarat;
+  
+  // Calculate total diamond cost and breakdown
+  const totalDiamondCost = diamonds.reduce((total, diamond) => {
+    return total + (diamond.carat * diamond.cost_per_carat);
+  }, 0);
+  
   const makingCharges = goldWeight * makingChargesPerGram;
-  const subtotal = goldValue + diamondCost + makingCharges + basePrice;
+  const subtotal = goldValue + totalDiamondCost + makingCharges + basePrice;
   const gst = subtotal * gstRate;
 
-  return { goldValue, diamondCost, makingCharges, basePrice, subtotal, gst, total: subtotal + gst };
+  return { 
+    goldValue, 
+    diamondCost: totalDiamondCost, 
+    makingCharges, 
+    basePrice, 
+    subtotal, 
+    gst, 
+    total: subtotal + gst,
+    diamonds // Include individual diamond breakdown
+  };
+};
+
+// Helper function to get total diamond weight
+export const getTotalDiamondWeight = (diamonds: Diamond[]): number => {
+  return diamonds.reduce((total, diamond) => total + diamond.carat, 0);
+};
+
+// Helper function to format diamond summary
+export const formatDiamondSummary = (diamonds: Diamond[]): string => {
+  if (diamonds.length === 0) return 'No diamonds';
+  if (diamonds.length === 1) {
+    const diamond = diamonds[0];
+    return `${diamond.carat}ct ${diamond.quality}`.trim();
+  }
+  const totalCarats = getTotalDiamondWeight(diamonds);
+  return `${totalCarats}ct (${diamonds.length} stones)`;
 };

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { JewelryItem } from '../lib/supabase';
-import { calculateJewelryPriceSync, formatCurrency, formatWeight, getPriceBreakdown } from '../lib/goldPrice';
+import { calculateJewelryPriceSync, formatCurrency, formatWeight, getPriceBreakdown, getTotalDiamondWeight, formatDiamondSummary } from '../lib/goldPrice';
 import { useGoldPrice } from '../hooks/useGoldPrice';
 import { useAdminSettings } from '../hooks/useAdminSettings';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Gem } from 'lucide-react';
 
 interface JewelryCardProps {
   item: JewelryItem;
@@ -14,12 +14,22 @@ export function JewelryCard({ item }: JewelryCardProps) {
   const { gstRate } = useAdminSettings();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
+  // Use new diamonds array if available, otherwise fall back to legacy fields
+  const diamonds = item.diamonds?.length > 0 
+    ? item.diamonds 
+    : item.diamond_weight > 0 
+      ? [{
+          carat: item.diamond_weight,
+          quality: item.diamond_quality || '',
+          cost_per_carat: item.diamond_cost_per_carat || 0
+        }]
+      : [];
+
   const finalPrice = calculateJewelryPriceSync(
     item.base_price,
     item.gold_weight,
     item.gold_quality,
-    item.diamond_weight,
-    item.diamond_cost_per_carat,
+    diamonds,
     item.making_charges_per_gram,
     goldPrice,
     gstRate
@@ -29,8 +39,7 @@ export function JewelryCard({ item }: JewelryCardProps) {
     item.base_price,
     item.gold_weight,
     item.gold_quality,
-    item.diamond_weight,
-    item.diamond_cost_per_carat,
+    diamonds,
     item.making_charges_per_gram,
     goldPrice,
     gstRate
@@ -47,6 +56,8 @@ export function JewelryCard({ item }: JewelryCardProps) {
   const prevImage = () => {
     setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
+
+  const totalDiamondWeight = getTotalDiamondWeight(diamonds);
 
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
@@ -96,6 +107,14 @@ export function JewelryCard({ item }: JewelryCardProps) {
             {currentImageIndex + 1}/{images.length}
           </div>
         )}
+
+        {/* Diamond Count Badge */}
+        {diamonds.length > 0 && (
+          <div className="absolute top-4 right-4 bg-blue-500 bg-opacity-90 text-white px-2 py-1 rounded-full text-xs flex items-center space-x-1">
+            <Gem className="h-3 w-3" />
+            <span>{diamonds.length}</span>
+          </div>
+        )}
       </div>
 
       <div className="p-6">
@@ -109,10 +128,10 @@ export function JewelryCard({ item }: JewelryCardProps) {
               <span className="font-medium">{formatWeight(item.gold_weight)}</span>
             </div>
           )}
-          {item.diamond_weight > 0 && (
+          {totalDiamondWeight > 0 && (
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Diamond:</span>
-              <span className="font-medium">{item.diamond_weight}ct {item.diamond_quality}</span>
+              <span className="text-gray-500">Diamonds:</span>
+              <span className="font-medium">{formatDiamondSummary(diamonds)}</span>
             </div>
           )}
           <div className="flex justify-between text-sm">
@@ -124,6 +143,36 @@ export function JewelryCard({ item }: JewelryCardProps) {
             <span className="font-medium">{formatCurrency(item.making_charges_per_gram)}/gram</span>
           </div>
         </div>
+
+        {/* Detailed Diamond Information */}
+        {diamonds.length > 0 && (
+          <div className="bg-blue-50 rounded-lg p-3 mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-blue-800 flex items-center">
+                <Gem className="h-4 w-4 mr-1" />
+                Diamond Details
+              </span>
+            </div>
+            <div className="space-y-1 text-xs">
+              {diamonds.map((diamond, index) => (
+                <div key={index} className="flex justify-between">
+                  <span className="text-blue-600">
+                    Diamond {index + 1}: {diamond.carat}ct {diamond.quality}
+                  </span>
+                  <span className="text-blue-700">
+                    {formatCurrency(diamond.carat * diamond.cost_per_carat)}
+                  </span>
+                </div>
+              ))}
+              {diamonds.length > 1 && (
+                <div className="flex justify-between border-t border-blue-200 pt-1 font-medium">
+                  <span className="text-blue-700">Total:</span>
+                  <span className="text-blue-700">{formatCurrency(breakdown.diamondCost)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="bg-gray-50 rounded-lg p-3 mb-4">
           <div className="flex items-center justify-between mb-2">
