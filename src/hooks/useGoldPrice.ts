@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { getCurrentGoldPrice } from '../lib/goldPrice';
+import { useAdminSettings } from './useAdminSettings';
 
 export function useGoldPrice() {
   const [goldPrice, setGoldPrice] = useState(5450);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { overrideLiveGoldPrice } = useAdminSettings();
 
   useEffect(() => {
     let mounted = true;
@@ -13,7 +15,7 @@ export function useGoldPrice() {
       try {
         setLoading(true);
         setError(null);
-        const price = await getCurrentGoldPrice();
+        const price = await getCurrentGoldPrice(overrideLiveGoldPrice);
         if (mounted) setGoldPrice(price);
       } catch (err) {
         if (mounted) {
@@ -32,7 +34,7 @@ export function useGoldPrice() {
       mounted = false;
       clearInterval(interval);
     };
-  }, []);
+  }, [overrideLiveGoldPrice]);
 
   return { goldPrice, loading, error };
 }

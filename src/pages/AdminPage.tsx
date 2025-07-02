@@ -17,7 +17,7 @@ export function AdminPage() {
   const [activeTab, setActiveTab] = useState<'items' | 'categories' | 'settings'>('items');
   
   const { goldPrice } = useGoldPrice();
-  const { fallbackGoldPrice, gstRate, updateSetting } = useAdminSettings();
+  const { fallbackGoldPrice, gstRate, overrideLiveGoldPrice, updateSetting } = useAdminSettings();
 
   useEffect(() => {
     checkAuthStatus();
@@ -68,6 +68,8 @@ export function AdminPage() {
     loadData();
   };
 
+  const effectiveGoldPrice = overrideLiveGoldPrice ? fallbackGoldPrice : goldPrice;
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -92,7 +94,12 @@ export function AdminPage() {
         </div>
         <div className="flex items-center space-x-4">
           <div className="text-sm text-gray-600">
-            Gold Price: <span className="font-semibold text-yellow-600">{formatCurrency(goldPrice)}/gram</span>
+            Gold Price: <span className={`font-semibold ${overrideLiveGoldPrice ? 'text-orange-600' : 'text-yellow-600'}`}>
+              {formatCurrency(effectiveGoldPrice)}/gram
+            </span>
+            {overrideLiveGoldPrice && (
+              <span className="text-xs text-orange-600 block">Override Active</span>
+            )}
           </div>
           <div className="text-sm text-gray-600">
             GST: <span className="font-semibold text-green-600">{Math.round(gstRate * 100)}%</span>
@@ -133,7 +140,7 @@ export function AdminPage() {
       {activeTab === 'items' && (
         <AdminItemsTab 
           categories={categories}
-          goldPrice={goldPrice}
+          goldPrice={effectiveGoldPrice}
           gstRate={gstRate}
         />
       )}
@@ -150,6 +157,7 @@ export function AdminPage() {
           fallbackGoldPrice={fallbackGoldPrice}
           gstRate={gstRate}
           goldPrice={goldPrice}
+          overrideLiveGoldPrice={overrideLiveGoldPrice}
           updateSetting={updateSetting}
         />
       )}

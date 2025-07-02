@@ -11,31 +11,44 @@ const getAdminSettings = async () => {
     const { data } = await supabase
       .from('admin_settings')
       .select('setting_key, setting_value')
-      .in('setting_key', ['fallback_gold_price', 'gst_rate']);
+      .in('setting_key', ['fallback_gold_price', 'gst_rate', 'override_live_gold_price']);
 
-    const settings = { fallbackPrice: 5450, gstRate: 0.18 };
+    const settings = { fallbackPrice: 5450, gstRate: 0.18, overrideLivePrice: false };
     
     data?.forEach(setting => {
       if (setting.setting_key === 'fallback_gold_price') {
         settings.fallbackPrice = parseFloat(setting.setting_value) || 5450;
       } else if (setting.setting_key === 'gst_rate') {
         settings.gstRate = parseFloat(setting.setting_value) || 0.18;
+      } else if (setting.setting_key === 'override_live_gold_price') {
+        settings.overrideLivePrice = setting.setting_value === 'true';
       }
     });
     
     return settings;
   } catch (error) {
     console.warn('Failed to load admin settings:', error);
-    return { fallbackPrice: 5450, gstRate: 0.18 };
+    return { fallbackPrice: 5450, gstRate: 0.18, overrideLivePrice: false };
   }
 };
 
-export const getCurrentGoldPrice = async (): Promise<number> => {
+export const getCurrentGoldPrice = async (overrideLivePrice?: boolean): Promise<number> => {
+  const { fallbackPrice, overrideLivePrice: settingsOverride } = await getAdminSettings();
+  
+  // Use the override parameter if provided, otherwise use the setting from database
+  const shouldOverride = overrideLivePrice !== undefined ? overrideLivePrice : settingsOverride;
+  
+  // If override is enabled, return fallback price immediately
+  if (shouldOverride) {
+    console.log('Gold price override enabled, using fallback price:', fallbackPrice);
+    cachedPrice = { price: fallbackPrice, timestamp: new Date() };
+    return fallbackPrice;
+  }
+
+  // Check cache first
   if (cachedPrice && Date.now() - cachedPrice.timestamp.getTime() < CACHE_DURATION) {
     return cachedPrice.price;
   }
-
-  const { fallbackPrice } = await getAdminSettings();
 
   try {
     const response = await fetch(GOLD_API_URL);
@@ -45,6 +58,7 @@ export const getCurrentGoldPrice = async (): Promise<number> => {
       if (data.rates?.XAU) {
         const pricePerGramINR = (1 / data.rates.XAU) / 31.1035;
         cachedPrice = { price: pricePerGramINR, timestamp: new Date() };
+        console.log('Live gold price fetched successfully:', pricePerGramINR);
         return pricePerGramINR;
       }
     }
@@ -52,6 +66,8 @@ export const getCurrentGoldPrice = async (): Promise<number> => {
     console.warn('Failed to fetch live gold price:', error);
   }
 
+  // Fallback to admin setting
+  console.log('Using fallback gold price due to API failure:', fallbackPrice);
   cachedPrice = { price: fallbackPrice, timestamp: new Date() };
   return fallbackPrice;
 };

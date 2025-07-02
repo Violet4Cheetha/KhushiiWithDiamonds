@@ -6,27 +6,31 @@ interface AdminSettingsTabProps {
   fallbackGoldPrice: number;
   gstRate: number;
   goldPrice: number;
+  overrideLiveGoldPrice: boolean;
   updateSetting: (key: string, value: string) => Promise<boolean>;
 }
 
 export function AdminSettingsTab({ 
   fallbackGoldPrice, 
   gstRate, 
-  goldPrice, 
+  goldPrice,
+  overrideLiveGoldPrice,
   updateSetting 
 }: AdminSettingsTabProps) {
   const [showSettingsForm, setShowSettingsForm] = useState(false);
   const [settingsFormData, setSettingsFormData] = useState({
     fallback_gold_price: fallbackGoldPrice.toString(),
     gst_rate: (gstRate * 100).toString(),
+    override_live_gold_price: overrideLiveGoldPrice,
   });
 
   React.useEffect(() => {
     setSettingsFormData({
       fallback_gold_price: fallbackGoldPrice.toString(),
       gst_rate: (gstRate * 100).toString(),
+      override_live_gold_price: overrideLiveGoldPrice,
     });
-  }, [fallbackGoldPrice, gstRate]);
+  }, [fallbackGoldPrice, gstRate, overrideLiveGoldPrice]);
 
   const handleSettingsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,11 +38,13 @@ export function AdminSettingsTab({
     try {
       const fallbackPrice = parseFloat(settingsFormData.fallback_gold_price);
       const gstDecimal = parseFloat(settingsFormData.gst_rate) / 100;
+      const overrideValue = settingsFormData.override_live_gold_price.toString();
 
       const success1 = await updateSetting('fallback_gold_price', fallbackPrice.toString());
       const success2 = await updateSetting('gst_rate', gstDecimal.toString());
+      const success3 = await updateSetting('override_live_gold_price', overrideValue);
 
-      if (success1 && success2) {
+      if (success1 && success2 && success3) {
         alert('Settings updated successfully!');
         setShowSettingsForm(false);
       } else {
@@ -49,6 +55,8 @@ export function AdminSettingsTab({
       alert('Error updating settings. Please check your input values.');
     }
   };
+
+  const effectiveGoldPrice = overrideLiveGoldPrice ? fallbackGoldPrice : goldPrice;
 
   return (
     <>
@@ -68,7 +76,7 @@ export function AdminSettingsTab({
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <h3 className="text-lg font-semibold text-yellow-800 mb-2">Fallback Gold Price</h3>
             <p className="text-2xl font-bold text-yellow-600">{formatCurrency(fallbackGoldPrice)}/gram</p>
-            <p className="text-sm text-yellow-700 mt-1">Used when live API fails</p>
+            <p className="text-sm text-yellow-700 mt-1">Used when live API fails or override is enabled</p>
           </div>
 
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -86,11 +94,38 @@ export function AdminSettingsTab({
               <span className="font-medium">{formatCurrency(goldPrice)}/gram</span>
             </div>
             <div className="flex justify-between">
+              <span className="text-gray-600">Effective Price:</span>
+              <span className="font-medium">{formatCurrency(effectiveGoldPrice)}/gram</span>
+            </div>
+            <div className="flex justify-between">
               <span className="text-gray-600">Price Source:</span>
-              <span className="font-medium">{goldPrice === fallbackGoldPrice ? 'Fallback' : 'Live API'}</span>
+              <span className={`font-medium ${overrideLiveGoldPrice ? 'text-orange-600' : goldPrice === fallbackGoldPrice ? 'text-red-600' : 'text-green-600'}`}>
+                {overrideLiveGoldPrice ? 'Override (Fallback)' : goldPrice === fallbackGoldPrice ? 'Fallback (API Failed)' : 'Live API'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Override Enabled:</span>
+              <span className={`font-medium ${overrideLiveGoldPrice ? 'text-orange-600' : 'text-gray-600'}`}>
+                {overrideLiveGoldPrice ? 'Yes' : 'No'}
+              </span>
             </div>
           </div>
         </div>
+
+        {overrideLiveGoldPrice && (
+          <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-orange-800">
+                  <strong>Override Active:</strong> The system is using fallback gold prices instead of live prices.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Settings Form Modal */}
@@ -119,7 +154,7 @@ export function AdminSettingsTab({
                   placeholder="5450"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Used when live gold price API is unavailable
+                  Used when live gold price API is unavailable or override is enabled
                 </p>
               </div>
 
@@ -138,6 +173,24 @@ export function AdminSettingsTab({
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   GST percentage applied to all jewellery items
+                </p>
+              </div>
+
+              <div>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="override_live_gold_price"
+                    checked={settingsFormData.override_live_gold_price}
+                    onChange={(e) => setSettingsFormData({ ...settingsFormData, override_live_gold_price: e.target.checked })}
+                    className="h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="override_live_gold_price" className="ml-2 block text-sm text-gray-700">
+                    Override Live Gold Prices with Fallback Gold Prices
+                  </label>
+                </div>
+                <p className="text-xs text-gray-500 mt-1 ml-6">
+                  When enabled, the system will always use fallback prices instead of live API prices
                 </p>
               </div>
 
