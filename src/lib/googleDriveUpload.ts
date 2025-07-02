@@ -20,8 +20,24 @@ interface UploadResponse {
   details?: string
 }
 
+interface DeleteResponse {
+  success: boolean
+  results: Array<{
+    url: string
+    fileId: string | null
+    success: boolean
+    error?: string
+  }>
+  summary: {
+    total: number
+    successful: number
+    failed: number
+  }
+}
+
 export class GoogleDriveUploadService {
   private static readonly EDGE_FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_DATABASE_URL}/functions/v1/upload-to-drive`
+  private static readonly DELETE_FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_DATABASE_URL}/functions/v1/delete-from-drive`
 
   /**
    * Convert File objects to base64 encoded data
@@ -148,6 +164,50 @@ export class GoogleDriveUploadService {
 
     } catch (error) {
       console.error('Google Drive upload error:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Delete files from Google Drive
+   */
+  static async deleteFiles(imageUrls: string[]): Promise<DeleteResponse> {
+    try {
+      if (!imageUrls || imageUrls.length === 0) {
+        throw new Error('No image URLs provided for deletion')
+      }
+
+      console.log(`Starting deletion process for ${imageUrls.length} files`)
+
+      // Prepare request payload
+      const requestPayload = {
+        imageUrls,
+      }
+
+      console.log(`Calling delete edge function: ${this.DELETE_FUNCTION_URL}`)
+
+      // Call the delete edge function
+      const response = await fetch(this.DELETE_FUNCTION_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify(requestPayload),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const result: DeleteResponse = await response.json()
+      
+      console.log(`Deletion complete: ${result.summary.successful} successful, ${result.summary.failed} failed`)
+      return result
+
+    } catch (error) {
+      console.error('Google Drive deletion error:', error)
       throw error
     }
   }
