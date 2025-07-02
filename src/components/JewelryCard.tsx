@@ -3,7 +3,7 @@ import { JewelryItem } from '../lib/supabase';
 import { calculateJewelryPriceSync, formatCurrency, formatWeight, getPriceBreakdown, getTotalDiamondWeight, formatDiamondSummary } from '../lib/goldPrice';
 import { useGoldPrice } from '../hooks/useGoldPrice';
 import { useAdminSettings } from '../hooks/useAdminSettings';
-import { ChevronLeft, ChevronRight, Gem, X, ZoomIn } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, ZoomIn } from 'lucide-react';
 
 interface JewelryCardProps {
   item: JewelryItem;
@@ -144,15 +144,6 @@ export function JewelryCard({ item }: JewelryCardProps) {
               {currentImageIndex + 1}/{images.length}
             </div>
           )}
-
-          {/* Diamond Count Badge */}
-          {diamonds.length > 0 && (
-            <div className="absolute top-4 right-4 bg-blue-500 bg-opacity-90 text-white px-2 py-1 rounded-full text-xs flex items-center space-x-1">
-              <Gem className="h-3 w-3" />
-              <span>{diamonds.length}</span>
-            </div>
-          )}
-        </div>
 
         <div className="p-6">
           <h3 className="text-xl font-bold text-gray-900 mb-2">{item.name}</h3>
