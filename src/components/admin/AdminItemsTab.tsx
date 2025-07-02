@@ -206,9 +206,6 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div className="space-y-1">
                         <div>Making: {formatCurrency(item.making_charges_per_gram)}/g</div>
-                        {totalDiamondWeight > 0 && (
-                          <div>Diamonds: {diamonds.length} stone{diamonds.length > 1 ? 's' : ''}</div>
-                        )}
                         <div>Base: {formatCurrency(item.base_price)}</div>
                       </div>
                     </td>
