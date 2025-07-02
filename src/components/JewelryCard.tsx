@@ -3,7 +3,7 @@ import { JewelryItem } from '../lib/supabase';
 import { calculateJewelryPriceSync, formatCurrency, formatWeight, getPriceBreakdown, getTotalDiamondWeight, formatDiamondSummary } from '../lib/goldPrice';
 import { useGoldPrice } from '../hooks/useGoldPrice';
 import { useAdminSettings } from '../hooks/useAdminSettings';
-import { ChevronLeft, ChevronRight, X, ZoomIn } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Gem, X, ZoomIn } from 'lucide-react';
 
 interface JewelryCardProps {
   item: JewelryItem;
