@@ -144,6 +144,7 @@ export function JewelryCard({ item }: JewelryCardProps) {
               {currentImageIndex + 1}/{images.length}
             </div>
           )}
+        </div>
 
         <div className="p-6">
           <h3 className="text-xl font-bold text-gray-900 mb-2">{item.name}</h3>
