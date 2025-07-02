@@ -347,14 +347,14 @@ export function JewelryForm({
                         </div>
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center">
                           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex space-x-2">
-                            <button
+                            {/* <button
                               type="button"
                               onClick={() => setPreviewImage(imageUrl)}
                               className="bg-white text-gray-700 p-2 rounded-full hover:bg-gray-100"
                               title="Preview"
                             >
                               <Eye className="h-4 w-4" />
-                            </button>
+                            </button>*/}
                             <button
                               type="button"
                               onClick={() => window.open(imageUrl, '_blank')}
