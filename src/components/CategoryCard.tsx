@@ -14,7 +14,7 @@ export function CategoryCard({ category, itemCount = 0 }: CategoryCardProps) {
   // Support multiple images for categories by splitting comma-separated URLs
   const images = category.image_url 
     ? category.image_url.split(',').map(url => url.trim()).filter(url => url)
-    : ['https://images.pexels.com/photos/265856/pexels-photo-265856.jpeg'];
+    : ['https://drive.google.com/thumbnail?id=1KRTxnA-gFSbg6R5EfBhu-y-tAxElt_AO&sz=w625-h340'];
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % images.length);
