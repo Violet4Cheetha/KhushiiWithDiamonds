@@ -36,13 +36,11 @@
 
     [![Supabase][supabase-img]][supabase-url]
 
-- npm (if you want to run locally)
+- Google account
 
-```sh
-  npm install npm@latest -g
-```
+  [![Google][google-img]][google-url]
 
-- A web hosting platform (if you want to deploy your project online).
+- A web hosting platform (if you want to deploy your project online)(Recommended)
     
     You can choose any hosting provider, but I will demonstrate how to deploy it using Netlify and Hostinger
 
@@ -50,17 +48,27 @@
 
     [![Hostinger][hostinger-img]][hostinger-url]
 
-### Supabase SQL Code
+- npm (if you want to run locally)
+
+```sh
+  npm install npm@latest -g
+```
+
+
+
+### Google Drive API Setup
+
+### Supabase Setup
 
 - Create a new database at Supabase and get its URL and Key.
 
 - Run the [Final_sql](https://github.com/Violet4Cheetha/KhushiiWithDiamonds/blob/main/supabase/Final_sql.sql) code in its SQL tab.
 
--Your SQL database should now have jewellery_item,categories and admin_setting tables.
+- Your SQL database should now have jewellery_item,categories and admin_setting tables.
 
--Create [upload-to-drive](https://github.com/Violet4Cheetha/KhushiiWithDiamonds/blob/main/supabase/upload-to-drive/index.ts) and [delete-from-drive](https://github.com/Violet4Cheetha/KhushiiWithDiamonds/blob/77f52deda1c795d6a22cfd53c8a6e67f51b6dfb4/supabase/delete-from-drive/index.ts)
+- Create [upload-to-drive](https://github.com/Violet4Cheetha/KhushiiWithDiamonds/blob/main/supabase/upload-to-drive/index.ts) and [delete-from-drive](https://github.com/Violet4Cheetha/KhushiiWithDiamonds/blob/77f52deda1c795d6a22cfd53c8a6e67f51b6dfb4/supabase/delete-from-drive/index.ts)
 
--
+- Add `GOOGLE_CLIENT_ID`,`GOOGLE_CLIENT_SECRET` and `GOOGLE_REFRESH_TOKEN` edge function secret.
 
 ### Installation (To run locally)
 
@@ -93,9 +101,18 @@ VITE_SUPABASE_ANON_KEY={your supabase key}
 VITE_GOLD_API_KEY={your metalpriceapi key}
 ```
 
+6. Built Vite project
+
+```
+npm run build
+```
+
+
+
 
     
-
+[google-img]: https://img.shields.io/badge/Google-4285F4?style=for-the-badge&logo=google&logoColor=white
+[google-url]: https://www.google.com/
 
 [netlify-img]: https://img.shields.io/badge/Netlify-00C7B7?style=for-the-badge&logo=netlify&logoColor=white
 [netlify-url]: https://www.netlify.com/
