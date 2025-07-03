@@ -57,7 +57,7 @@ export type Category = {
   created_at: string;
 };
 
-export type AdminSetting = {
+type AdminSetting = {
   id: string;
   setting_key: string;
   setting_value: string;

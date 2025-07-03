@@ -237,4 +237,3 @@ export class GoogleDriveUploadService {
   }
 }
 
-export default GoogleDriveUploadService

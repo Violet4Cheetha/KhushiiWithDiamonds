@@ -101,7 +101,7 @@ export const calculateJewelryPriceSync = (
 };
 
 // Legacy function for backward compatibility
-export const calculateJewelryPriceSyncLegacy = (
+const calculateJewelryPriceSyncLegacy = (
   basePrice: number,
   goldWeight: number,
   goldQuality: string,
