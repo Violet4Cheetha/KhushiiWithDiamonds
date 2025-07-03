@@ -138,7 +138,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                       <div className="flex items-center">
                         <img
                           className="h-10 w-10 rounded-full object-cover"
-                          src={item.image_url[0] || 'https://images.pexels.com/photos/265856/pexels-photo-265856.jpeg'}
+                          src={item.image_url[0] || 'https://drive.google.com/thumbnail?id=1KRTxnA-gFSbg6R5EfBhu-y-tAxElt_AO&sz=w625-h340'}
                           alt=""
                         />
                         <div className="ml-4">
