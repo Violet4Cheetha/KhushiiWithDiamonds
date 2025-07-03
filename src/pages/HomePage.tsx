@@ -77,7 +77,7 @@ export function HomePage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Sparkles className="h-12 w-12 text-yellow-600 mx-auto animate-spin" />
-          <p className="mt-4 text-gray-600">Loading jewelry collection...</p>
+          <p className="mt-4 text-gray-600">Loading jewellery collection...</p>
         </div>
       </div>
     );
