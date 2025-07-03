@@ -33,6 +33,21 @@ export function CategoryForm({ categories, editingCategory, onSubmit, onCancel }
     setSelectedImages(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Function to generate category description
+  const generateCategoryDescription = (): string => {
+    let description = `Name: ${categoryFormData.name}\n`;
+    description += `Description: ${categoryFormData.description || 'N/A'}\n`;
+    
+    if (categoryFormData.parent_id) {
+      const parentCategory = categories.find(cat => cat.id === categoryFormData.parent_id);
+      description += `Parent Category: ${parentCategory?.name || 'N/A'}\n`;
+    } else {
+      description += `Category Type: Top-level category\n`;
+    }
+    
+    return description;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setUploading(true);
@@ -43,9 +58,12 @@ export function CategoryForm({ categories, editingCategory, onSubmit, onCancel }
       // Upload images to Google Drive if any are selected
       if (selectedImages.length > 0) {
         try {
+          const itemDescription = generateCategoryDescription(); // Generate the description here
+          
           imageUrls = await GoogleDriveUploadService.uploadCategoryImages(
             selectedImages,
-            categoryFormData.name
+            categoryFormData.name,
+            itemDescription // Pass the generated description
           );
           console.log('Successfully uploaded category images:', imageUrls);
         } catch (uploadError) {

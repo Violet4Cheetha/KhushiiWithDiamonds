@@ -88,7 +88,8 @@ export class GoogleDriveUploadService {
     itemName: string,
     itemType: 'category' | 'jewelry',
     category?: string,
-    parentCategory?: string
+    parentCategory?: string,
+    itemDescription?: string // Add this new parameter
   ): Promise<UploadResponse> {
     try {
       if (!files || files.length === 0) {
@@ -134,6 +135,7 @@ export class GoogleDriveUploadService {
         folderPath,
         itemName,
         itemType,
+        itemDescription, // Add this line
       }
 
       console.log(`Calling edge function: ${this.EDGE_FUNCTION_URL}`)
@@ -217,9 +219,10 @@ export class GoogleDriveUploadService {
    */
   static async uploadCategoryImages(
     files: File[],
-    categoryName: string
+    categoryName: string,
+    itemDescription: string // Add this new parameter
   ): Promise<string[]> {
-    const result = await this.uploadFiles(files, categoryName, 'category')
+    const result = await this.uploadFiles(files, categoryName, 'category', undefined, undefined, itemDescription) // Pass itemDescription
     return result.imageUrls
   }
 
@@ -230,10 +233,10 @@ export class GoogleDriveUploadService {
     files: File[],
     itemName: string,
     category: string,
-    parentCategory?: string
+    parentCategory?: string, // Ensure this is optional
+    itemDescription?: string // Add this new parameter
   ): Promise<string[]> {
-    const result = await this.uploadFiles(files, itemName, 'jewelry', category, parentCategory)
+    const result = await this.uploadFiles(files, itemName, 'jewelry', category, parentCategory, itemDescription) // Pass itemDescription
     return result.imageUrls
   }
 }
-

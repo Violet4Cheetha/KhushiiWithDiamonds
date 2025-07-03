@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { JewelryItem, Category, Diamond } from '../../lib/supabase';
 import { Save, X, Upload, FileImage, Loader, ChevronDown, ChevronRight, Folder, Plus, Trash2, Gem, Eye, ExternalLink } from 'lucide-react';
-import { formatCurrency, calculateJewelryPriceSync } from '../../lib/goldPrice';
+import { formatCurrency, calculateJewelryPriceSync, getTotalDiamondWeight } from '../../lib/goldPrice';
 import { GoogleDriveUploadService } from '../../lib/googleDriveUpload';
 
 interface JewelryFormProps {
@@ -169,12 +169,36 @@ export function JewelryForm({
     setCurrentImages(prev => [...prev, imageUrl]);
   };
 
+  // Function to generate the detailed description string
+  const generateItemDescription = (): string => {
+    let description = `Name: ${formData.name}\n`;
+    description += `Description: ${formData.description || 'N/A'}\n`;
+    description += `Gold Weight: ${formData.gold_weight}g\n`;
+    description += `Gold Quality: ${formData.gold_quality}\n`;
+    description += `Making Charges Per Gram: ${formatCurrency(formData.making_charges_per_gram)}/g\n`;
+
+    if (diamonds.length > 0) {
+      diamonds.forEach((d, index) => {
+        description += `Diamond ${index + 1}: ${d.carat}ct, Quality: ${d.quality || 'N/A'}, Cost per Carat: ${formatCurrency(d.cost_per_carat)}, Total cost: ${formatCurrency(d.carat * d.cost_per_carat)}\n`;
+      });
+      const totalCarats = getTotalDiamondWeight(diamonds);
+      const totalDiamondCost = diamonds.reduce((sum, d) => sum + (d.carat * d.cost_per_carat), 0);
+      description += `Diamonds Summary: Total Carats: ${totalCarats.toFixed(2)}ct, Total Diamond Cost: ${formatCurrency(totalDiamondCost)}\n`;
+    } else {
+      description += `Diamonds: No diamonds\n`;
+    }
+
+    description += `Base Price: ${formatCurrency(formData.base_price)}\n`;
+    return description;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setUploading(true);
     
     try {
       let newImageUrls: string[] = [];
+      const itemDescription = generateItemDescription(); // Generate the description here
 
       // Upload new images to Google Drive if any are selected
       if (selectedImages.length > 0) {
@@ -183,13 +207,14 @@ export function JewelryForm({
           const selectedCategory = categories.find(cat => cat.name === formData.category);
           const parentCategory = selectedCategory?.parent_id 
             ? categories.find(cat => cat.id === selectedCategory.parent_id)
-            : null;
+            : undefined; // Ensure it's undefined if no parent
 
           newImageUrls = await GoogleDriveUploadService.uploadJewelryImages(
             selectedImages,
             formData.name,
             formData.category,
-            parentCategory?.name
+            parentCategory?.name,
+            itemDescription // Pass the generated description
           );
           console.log('Successfully uploaded jewelry images:', newImageUrls);
         } catch (uploadError) {
