@@ -48,7 +48,7 @@ export function HomePage() {
 
             // Count items in parent category and all its subcategories
             const { count, error: countError } = await supabase
-              .from('jewelry_items')
+              .from('jewellery_items')
               .select('*', { count: 'exact', head: true })
               .in('category', categoryNames);
             

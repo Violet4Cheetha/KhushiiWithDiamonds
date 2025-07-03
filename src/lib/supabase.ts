@@ -35,13 +35,10 @@ export type JewelryItem = {
   name: string;
   description: string;
   category: string;
-  images: string[];
+  image_url: string[];
   gold_weight: number;
   gold_quality: string;
-  diamond_weight: number; // Legacy field - kept for backward compatibility
-  diamond_quality: string; // Legacy field - kept for backward compatibility
-  diamond_cost_per_carat: number; // Legacy field - kept for backward compatibility
-  diamonds: Diamond[]; // New field for multiple diamonds
+  diamonds: Diamond[];
   making_charges_per_gram: number;
   base_price: number;
   created_at: string;

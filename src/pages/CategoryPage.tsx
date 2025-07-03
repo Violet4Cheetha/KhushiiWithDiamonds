@@ -45,7 +45,7 @@ export function CategoryPage() {
         const allCategoryNames = [categoryName, ...subcategoryNames];
 
         const { data: itemsData } = await supabase
-          .from('jewelry_items')
+          .from('jewellery_items')
           .select('*')
           .in('category', allCategoryNames)
           .order('created_at', { ascending: false });

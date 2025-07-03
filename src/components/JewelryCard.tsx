@@ -16,16 +16,8 @@ export function JewelryCard({ item }: JewelryCardProps) {
   const [showImageModal, setShowImageModal] = useState(false);
   const [modalImageIndex, setModalImageIndex] = useState(0);
   
-  // Use new diamonds array if available, otherwise fall back to legacy fields
-  const diamonds = item.diamonds?.length > 0 
-    ? item.diamonds 
-    : item.diamond_weight > 0 
-      ? [{
-          carat: item.diamond_weight,
-          quality: item.diamond_quality || '',
-          cost_per_carat: item.diamond_cost_per_carat || 0
-        }]
-      : [];
+  // Use diamonds array from the item
+  const diamonds = item.diamonds || [];
 
   const finalPrice = calculateJewelryPriceSync(
     item.base_price,
@@ -47,8 +39,8 @@ export function JewelryCard({ item }: JewelryCardProps) {
     gstRate
   );
 
-  const images = item.images.length > 0 
-    ? item.images 
+  const images = item.image_url.length > 0 
+    ? item.image_url 
     : ['https://images.pexels.com/photos/265856/pexels-photo-265856.jpeg'];
 
   const nextImage = () => {

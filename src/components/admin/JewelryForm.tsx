@@ -27,15 +27,7 @@ export function JewelryForm({
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   
   // Initialize diamonds from editing item or create empty array
-  const initialDiamonds: Diamond[] = editingItem?.diamonds?.length > 0 
-    ? editingItem.diamonds 
-    : editingItem?.diamond_weight > 0 
-      ? [{
-          carat: editingItem.diamond_weight,
-          quality: editingItem.diamond_quality || '',
-          cost_per_carat: editingItem.diamond_cost_per_carat || 25000
-        }]
-      : [];
+  const initialDiamonds: Diamond[] = editingItem?.diamonds || [];
 
   const [formData, setFormData] = useState({
     name: editingItem?.name || '', 
@@ -49,7 +41,7 @@ export function JewelryForm({
 
   const [diamonds, setDiamonds] = useState<Diamond[]>(initialDiamonds);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
-  const [currentImages, setCurrentImages] = useState<string[]>(editingItem?.images || []);
+  const [currentImages, setCurrentImages] = useState<string[]>(editingItem?.image_url || []);
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
 
   // Organize categories for expandable dropdown
@@ -347,14 +339,6 @@ export function JewelryForm({
                         </div>
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center">
                           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex space-x-2">
-                            {/* <button
-                              type="button"
-                              onClick={() => setPreviewImage(imageUrl)}
-                              className="bg-white text-gray-700 p-2 rounded-full hover:bg-gray-100"
-                              title="Preview"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </button>*/}
                             <button
                               type="button"
                               onClick={() => window.open(imageUrl, '_blank')}

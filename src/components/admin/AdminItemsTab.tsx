@@ -22,7 +22,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
   const loadItems = async () => {
     try {
       const { data } = await supabase
-        .from('jewelry_items')
+        .from('jewellery_items')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -45,17 +45,17 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
   const handleSubmit = async (itemData: any, imageUrls: string[]) => {
     const finalItemData = {
       ...itemData,
-      images: imageUrls, // Use actual Google Drive URLs
+      image_url: imageUrls, // Use actual Google Drive URLs
     };
 
     if (editingItem) {
       const { error } = await supabase
-        .from('jewelry_items')
+        .from('jewellery_items')
         .update({ ...finalItemData, updated_at: new Date().toISOString() })
         .eq('id', editingItem.id);
       if (error) throw error;
     } else {
-      const { error } = await supabase.from('jewelry_items').insert([finalItemData]);
+      const { error } = await supabase.from('jewellery_items').insert([finalItemData]);
       if (error) throw error;
     }
     
@@ -66,7 +66,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this item?')) {
       try {
-        const { error } = await supabase.from('jewelry_items').delete().eq('id', id);
+        const { error } = await supabase.from('jewellery_items').delete().eq('id', id);
         if (error) throw error;
         await loadItems();
       } catch (error) {
@@ -77,16 +77,8 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
   };
 
   const calculateTotalCost = (item: JewelryItem): number => {
-    // Use new diamonds array if available, otherwise fall back to legacy fields
-    const diamonds = item.diamonds?.length > 0 
-      ? item.diamonds 
-      : item.diamond_weight > 0 
-        ? [{
-            carat: item.diamond_weight,
-            quality: item.diamond_quality || '',
-            cost_per_carat: item.diamond_cost_per_carat || 0
-          }]
-        : [];
+    // Use diamonds array from the item
+    const diamonds = item.diamonds || [];
 
     return calculateJewelryPriceSync(
       item.base_price, item.gold_weight, item.gold_quality,
@@ -136,17 +128,8 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                 const totalCost = calculateTotalCost(item);
                 const categoryDisplay = getCategoryDisplayName(item.category);
                 
-                // Use new diamonds array if available, otherwise fall back to legacy fields
-                const diamonds = item.diamonds?.length > 0 
-                  ? item.diamonds 
-                  : item.diamond_weight > 0 
-                    ? [{
-                        carat: item.diamond_weight,
-                        quality: item.diamond_quality || '',
-                        cost_per_carat: item.diamond_cost_per_carat || 0
-                      }]
-                    : [];
-
+                // Use diamonds array from the item
+                const diamonds = item.diamonds || [];
                 const totalDiamondWeight = getTotalDiamondWeight(diamonds);
                 
                 return (
@@ -155,7 +138,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                       <div className="flex items-center">
                         <img
                           className="h-10 w-10 rounded-full object-cover"
-                          src={item.images[0] || 'https://images.pexels.com/photos/265856/pexels-photo-265856.jpeg'}
+                          src={item.image_url[0] || 'https://images.pexels.com/photos/265856/pexels-photo-265856.jpeg'}
                           alt=""
                         />
                         <div className="ml-4">
@@ -180,7 +163,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-1">
                         <Image className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm text-gray-600">{item.images.length}</span>
+                        <span className="text-sm text-gray-600">{item.image_url.length}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

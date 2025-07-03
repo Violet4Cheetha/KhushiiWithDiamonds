@@ -53,7 +53,7 @@ export function AdminPage() {
   const loadData = async () => {
     try {
       const [itemsResponse, categoriesResponse] = await Promise.all([
-        supabase.from('jewelry_items').select('*').order('created_at', { ascending: false }),
+        supabase.from('jewellery_items').select('*').order('created_at', { ascending: false }),
         supabase.from('categories').select('*').order('name')
       ]);
 

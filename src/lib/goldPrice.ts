@@ -100,29 +100,6 @@ export const calculateJewelryPriceSync = (
   return subtotal * (1 + gstRate);
 };
 
-// Legacy function for backward compatibility
-const calculateJewelryPriceSyncLegacy = (
-  basePrice: number,
-  goldWeight: number,
-  goldQuality: string,
-  diamondWeight: number,
-  diamondCostPerCarat: number,
-  makingChargesPerGram: number,
-  goldPricePerGram: number,
-  gstRate: number = 0.18
-): number => {
-  const diamonds: Diamond[] = diamondWeight > 0 ? [{
-    carat: diamondWeight,
-    quality: '',
-    cost_per_carat: diamondCostPerCarat
-  }] : [];
-  
-  return calculateJewelryPriceSync(
-    basePrice, goldWeight, goldQuality, diamonds, 
-    makingChargesPerGram, goldPricePerGram, gstRate
-  );
-};
-
 export const formatCurrency = (amount: number): string => 
   new Intl.NumberFormat('en-IN', {
     style: 'currency',
