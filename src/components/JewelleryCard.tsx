@@ -41,7 +41,7 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
 
   const images = item.image_url.length > 0 
     ? item.image_url 
-    : ['https://images.pexels.com/photos/265856/pexels-photo-265856.jpeg'];
+    : ['https://drive.google.com/thumbnail?id=1KRTxnA-gFSbg6R5EfBhu-y-tAxElt_AO&sz=w625-h340'];
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % images.length);
