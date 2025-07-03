@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase, JewelryItem, Category } from '../lib/supabase';
+import { supabase, JewelleryItem, Category } from '../lib/supabase';
 import { AdminLogin } from '../components/AdminLogin';
 import { AdminItemsTab } from '../components/admin/AdminItemsTab';
 import { AdminCategoriesTab } from '../components/admin/AdminCategoriesTab';
@@ -12,7 +12,7 @@ import { useAdminSettings } from '../hooks/useAdminSettings';
 export function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [items, setItems] = useState<JewelryItem[]>([]);
+  const [items, setItems] = useState<JewelleryItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeTab, setActiveTab] = useState<'items' | 'categories' | 'settings'>('items');
   
@@ -89,8 +89,8 @@ export function AdminPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Jewelry Admin Panel</h1>
-          <p className="text-gray-600 mt-1">Manage your jewelry catalog</p>
+          <h1 className="text-3xl font-bold text-gray-900">Jewellery Admin Panel</h1>
+          <p className="text-gray-600 mt-1">Manage your jewellery catalog</p>
         </div>
         <div className="flex items-center space-x-4">
           <div className="text-sm text-gray-600">

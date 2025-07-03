@@ -77,7 +77,7 @@ const purityMultipliers = {
 };
 
 // Updated function to handle multiple diamonds
-export const calculateJewelryPriceSync = (
+export const calculateJewelleryPriceSync = (
   basePrice: number,
   goldWeight: number,
   goldQuality: string,

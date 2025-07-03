@@ -60,7 +60,7 @@ export class GoogleDriveUploadService {
    * Determine folder path based on category hierarchy
    */
   private static getFolderPath(
-    itemType: 'category' | 'jewelry',
+    itemType: 'category' | 'jewellery',
     category?: string,
     parentCategory?: string
   ): string {
@@ -70,7 +70,7 @@ export class GoogleDriveUploadService {
       return basePath
     }
     
-    // For jewelry items
+    // For jewellery items
     if (parentCategory && category) {
       return `${basePath}/${parentCategory}/${category}`
     } else if (category) {
@@ -86,10 +86,10 @@ export class GoogleDriveUploadService {
   static async uploadFiles(
     files: File[],
     itemName: string,
-    itemType: 'category' | 'jewelry',
+    itemType: 'category' | 'jewellery',
     category?: string,
     parentCategory?: string,
-    itemDescription?: string // Add this new parameter
+    itemDescription?: string
   ): Promise<UploadResponse> {
     try {
       if (!files || files.length === 0) {
@@ -135,7 +135,7 @@ export class GoogleDriveUploadService {
         folderPath,
         itemName,
         itemType,
-        itemDescription, // Add this line
+        itemDescription,
       }
 
       console.log(`Calling edge function: ${this.EDGE_FUNCTION_URL}`)
@@ -220,23 +220,23 @@ export class GoogleDriveUploadService {
   static async uploadCategoryImages(
     files: File[],
     categoryName: string,
-    itemDescription: string // Add this new parameter
+    itemDescription: string
   ): Promise<string[]> {
-    const result = await this.uploadFiles(files, categoryName, 'category', undefined, undefined, itemDescription) // Pass itemDescription
+    const result = await this.uploadFiles(files, categoryName, 'category', undefined, undefined, itemDescription)
     return result.imageUrls
   }
 
   /**
-   * Upload jewelry item images
+   * Upload jewellery item images
    */
-  static async uploadJewelryImages(
+  static async uploadJewelleryImages(
     files: File[],
     itemName: string,
     category: string,
-    parentCategory?: string, // Ensure this is optional
-    itemDescription?: string // Add this new parameter
+    parentCategory?: string,
+    itemDescription?: string
   ): Promise<string[]> {
-    const result = await this.uploadFiles(files, itemName, 'jewelry', category, parentCategory, itemDescription) // Pass itemDescription
+    const result = await this.uploadFiles(files, itemName, 'jewellery', category, parentCategory, itemDescription)
     return result.imageUrls
   }
 }

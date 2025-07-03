@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { supabase, JewelryItem, Category } from '../../lib/supabase';
+import { supabase, JewelleryItem, Category } from '../../lib/supabase';
 import { Plus, Edit, Trash2, Image, ChevronRight, Gem } from 'lucide-react';
-import { formatCurrency, calculateJewelryPriceSync, getTotalDiamondWeight, formatDiamondSummary } from '../../lib/goldPrice';
-import { JewelryForm } from './JewelryForm';
+import { formatCurrency, calculateJewelleryPriceSync, getTotalDiamondWeight, formatDiamondSummary } from '../../lib/goldPrice';
+import { JewelleryForm } from './JewelleryForm';
 
 interface AdminItemsTabProps {
   categories: Category[];
@@ -11,9 +11,9 @@ interface AdminItemsTabProps {
 }
 
 export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabProps) {
-  const [items, setItems] = useState<JewelryItem[]>([]);
+  const [items, setItems] = useState<JewelleryItem[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingItem, setEditingItem] = useState<JewelryItem | null>(null);
+  const [editingItem, setEditingItem] = useState<JewelleryItem | null>(null);
 
   useEffect(() => {
     loadItems();
@@ -37,7 +37,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
     setEditingItem(null);
   };
 
-  const startEdit = (item: JewelryItem) => {
+  const startEdit = (item: JewelleryItem) => {
     setEditingItem(item);
     setShowAddForm(true);
   };
@@ -76,11 +76,11 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
     }
   };
 
-  const calculateTotalCost = (item: JewelryItem): number => {
+  const calculateTotalCost = (item: JewelleryItem): number => {
     // Use diamonds array from the item
     const diamonds = item.diamonds || [];
 
-    return calculateJewelryPriceSync(
+    return calculateJewelleryPriceSync(
       item.base_price, item.gold_weight, item.gold_quality,
       diamonds, item.making_charges_per_gram, goldPrice, gstRate
     );
@@ -101,7 +101,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Jewelry Items</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Jewellery Items</h2>
         <button
           onClick={() => setShowAddForm(true)}
           className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 flex items-center space-x-2"
@@ -224,7 +224,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
 
       {/* Add/Edit Form Modal */}
       {showAddForm && (
-        <JewelryForm
+        <JewelleryForm
           categories={categories}
           editingItem={editingItem}
           goldPrice={goldPrice}

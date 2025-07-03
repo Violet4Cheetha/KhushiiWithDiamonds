@@ -1,26 +1,26 @@
 import React, { useState } from 'react';
-import { JewelryItem, Category, Diamond } from '../../lib/supabase';
+import { JewelleryItem, Category, Diamond } from '../../lib/supabase';
 import { Save, X, Upload, FileImage, Loader, ChevronDown, ChevronRight, Folder, Plus, Trash2, Gem, Eye, ExternalLink } from 'lucide-react';
-import { formatCurrency, calculateJewelryPriceSync, getTotalDiamondWeight } from '../../lib/goldPrice';
+import { formatCurrency, calculateJewelleryPriceSync, getTotalDiamondWeight } from '../../lib/goldPrice';
 import { GoogleDriveUploadService } from '../../lib/googleDriveUpload';
 
-interface JewelryFormProps {
+interface JewelleryFormProps {
   categories: Category[];
-  editingItem: JewelryItem | null;
+  editingItem: JewelleryItem | null;
   goldPrice: number;
   gstRate: number;
   onSubmit: (itemData: any, imageUrls: string[]) => Promise<void>;
   onCancel: () => void;
 }
 
-export function JewelryForm({ 
+export function JewelleryForm({ 
   categories, 
   editingItem, 
   goldPrice, 
   gstRate, 
   onSubmit, 
   onCancel 
-}: JewelryFormProps) {
+}: JewelleryFormProps) {
   const [uploading, setUploading] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
@@ -209,14 +209,14 @@ export function JewelryForm({
             ? categories.find(cat => cat.id === selectedCategory.parent_id)
             : undefined; // Ensure it's undefined if no parent
 
-          newImageUrls = await GoogleDriveUploadService.uploadJewelryImages(
+          newImageUrls = await GoogleDriveUploadService.uploadJewelleryImages(
             selectedImages,
             formData.name,
             formData.category,
             parentCategory?.name,
             itemDescription // Pass the generated description
           );
-          console.log('Successfully uploaded jewelry images:', newImageUrls);
+          console.log('Successfully uploaded jewellery images:', newImageUrls);
         } catch (uploadError) {
           console.error('Image upload failed:', uploadError);
           alert(`Image upload failed: ${uploadError.message}. The item will be saved without new images.`);
@@ -344,7 +344,7 @@ export function JewelryForm({
             {/* Images Section */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
-                Jewelry Images
+                Jewellery Images
               </label>
               
               {/* Current Images */}
@@ -424,7 +424,7 @@ export function JewelryForm({
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                       <Upload className="w-8 h-8 mb-2 text-gray-500" />
                       <p className="mb-2 text-sm text-gray-500">
-                        <span className="font-semibold">Click to upload</span> new jewelry images
+                        <span className="font-semibold">Click to upload</span> new jewellery images
                       </p>
                       <p className="text-xs text-gray-500">PNG, JPG, JPEG (MAX. 10MB each)</p>
                     </div>
@@ -545,7 +545,7 @@ export function JewelryForm({
               {diamonds.length === 0 ? (
                 <div className="text-center py-4 text-gray-500">
                   <Gem className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                  <p>No diamonds added. Click "Add Diamond" to include diamonds in this jewelry item.</p>
+                  <p>No diamonds added. Click "Add Diamond" to include diamonds in this jewellery item.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -643,7 +643,7 @@ export function JewelryForm({
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <h4 className="text-sm font-medium text-green-800 mb-2">Live Price Preview</h4>
                 <div className="text-2xl font-bold text-green-600">
-                  {formatCurrency(calculateJewelryPriceSync(
+                  {formatCurrency(calculateJewelleryPriceSync(
                     formData.base_price, formData.gold_weight, formData.gold_quality,
                     diamonds, formData.making_charges_per_gram, goldPrice, gstRate
                   ))}

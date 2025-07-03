@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { supabase, Category, JewelryItem } from '../../lib/supabase';
+import { supabase, Category, JewelleryItem } from '../../lib/supabase';
 import { Plus, Folder } from 'lucide-react';
 import { CategoryForm } from './CategoryForm';
 import { CategoryCard } from './CategoryCard';
 
 interface AdminCategoriesTabProps {
-  items: JewelryItem[];
+  items: JewelleryItem[];
   onCategoriesChange: () => void;
 }
 

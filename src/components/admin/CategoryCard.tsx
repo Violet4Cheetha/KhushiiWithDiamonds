@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Category, JewelryItem } from '../../lib/supabase';
+import { Category, JewelleryItem } from '../../lib/supabase';
 import { Edit, Trash2, Image, ChevronRight, Folder, FolderOpen } from 'lucide-react';
 
 interface CategoryCardProps {
   category: Category;
-  items: JewelryItem[];
+  items: JewelleryItem[];
   subcategories: Category[];
   isSubcategory?: boolean;
   expandedCategories: Set<string>;

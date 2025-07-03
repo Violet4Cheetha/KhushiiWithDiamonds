@@ -30,7 +30,7 @@ export type Diamond = {
   cost_per_carat: number;
 };
 
-export type JewelryItem = {
+export type JewelleryItem = {
   id: string;
   name: string;
   description: string;

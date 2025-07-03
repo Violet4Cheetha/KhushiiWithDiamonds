@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { JewelryItem } from '../lib/supabase';
-import { calculateJewelryPriceSync, formatCurrency, formatWeight, getPriceBreakdown, getTotalDiamondWeight, formatDiamondSummary } from '../lib/goldPrice';
+import { JewelleryItem } from '../lib/supabase';
+import { calculateJewelleryPriceSync, formatCurrency, formatWeight, getPriceBreakdown, getTotalDiamondWeight, formatDiamondSummary } from '../lib/goldPrice';
 import { useGoldPrice } from '../hooks/useGoldPrice';
 import { useAdminSettings } from '../hooks/useAdminSettings';
 import { ChevronLeft, ChevronRight, Gem, X, ZoomIn } from 'lucide-react';
 
-interface JewelryCardProps {
-  item: JewelryItem;
+interface JewelleryCardProps {
+  item: JewelleryItem;
 }
 
-export function JewelryCard({ item }: JewelryCardProps) {
+export function JewelleryCard({ item }: JewelleryCardProps) {
   const { goldPrice } = useGoldPrice();
   const { gstRate } = useAdminSettings();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -19,7 +19,7 @@ export function JewelryCard({ item }: JewelryCardProps) {
   // Use diamonds array from the item
   const diamonds = item.diamonds || [];
 
-  const finalPrice = calculateJewelryPriceSync(
+  const finalPrice = calculateJewelleryPriceSync(
     item.base_price,
     item.gold_weight,
     item.gold_quality,

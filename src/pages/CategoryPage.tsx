@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { supabase, JewelryItem, Category } from '../lib/supabase';
-import { JewelryCard } from '../components/JewelryCard';
+import { supabase, JewelleryItem, Category } from '../lib/supabase';
+import { JewelleryCard } from '../components/JewelleryCard';
 import { Search, Filter, Sparkles, ChevronRight, Folder } from 'lucide-react';
 
 export function CategoryPage() {
   const { categoryName } = useParams<{ categoryName: string }>();
-  const [items, setItems] = useState<JewelryItem[]>([]);
-  const [filteredItems, setFilteredItems] = useState<JewelryItem[]>([]);
+  const [items, setItems] = useState<JewelleryItem[]>([]);
+  const [filteredItems, setFilteredItems] = useState<JewelleryItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('all');
@@ -180,7 +180,7 @@ export function CategoryPage() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
           <input
             type="text"
-            placeholder="Search jewelry..."
+            placeholder="Search jewellery..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
@@ -256,7 +256,7 @@ export function CategoryPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredItems.map((item) => (
-            <JewelryCard key={item.id} item={item} />
+            <JewelleryCard key={item.id} item={item} />
           ))}
         </div>
       )}
