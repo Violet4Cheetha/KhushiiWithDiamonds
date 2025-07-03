@@ -35,7 +35,7 @@ export function CategoryCard({
       <div className="bg-white rounded-lg shadow-md overflow-hidden mb-4">
         <div className="relative h-32">
           <img
-            src={category.image_url?.split(',')[0]?.trim() || 'https://images.pexels.com/photos/265856/pexels-photo-265856.jpeg'}
+            src={category.image_url?.split(',')[0]?.trim() || 'https://drive.google.com/thumbnail?id=1KRTxnA-gFSbg6R5EfBhu-y-tAxElt_AO&sz=w625-h340'}
             alt={category.name}
             className="w-full h-full object-cover"
           />
