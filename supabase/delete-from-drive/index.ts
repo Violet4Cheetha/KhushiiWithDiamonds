@@ -10,7 +10,7 @@ class GoogleDriveService {
   refreshToken;
   accessToken = null;
   constructor(){
-    this.clientId =  Deno.env.get('GOOGLE_CLIENT_ID');
+    this.clientId = Deno.env.get('GOOGLE_CLIENT_ID');
     this.clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET') || '';
     this.refreshToken = Deno.env.get('GOOGLE_REFRESH_TOKEN') || '';
     if (!this.clientSecret || !this.refreshToken) {
