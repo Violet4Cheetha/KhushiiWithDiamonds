@@ -29,6 +29,8 @@ export type Diamond = {
   cost_per_carat: number;
 };
 
+export type DiamondQuality = 'Lab Grown' | 'GH/VS-SI' | 'FG/VVS-SI' | 'EF/VVS';
+
 export type JewelleryItem = {
   id: string;
   name: string;
@@ -37,8 +39,10 @@ export type JewelleryItem = {
   image_url: string[];
   gold_weight: number;
   gold_quality: string;
-  diamonds: Diamond[];
-  diamond_quality: string;
+  diamonds_lab_grown: Diamond[];
+  diamonds_gh_vs_si: Diamond[];
+  diamonds_fg_vvs_si: Diamond[];
+  diamonds_ef_vvs: Diamond[];
   making_charges_per_gram: number;
   base_price: number;
   created_at: string;

@@ -1,4 +1,4 @@
-import { supabase, Diamond } from './supabase';
+import { supabase, Diamond, DiamondQuality } from './supabase';
 
 const GOLD_API_KEY = import.meta.env.VITE_GOLD_API_KEY || '9886e90c5c52f1a75a3ca50daccd91d4';
 const GOLD_API_URL = `https://api.metalpriceapi.com/v1/latest?api_key=${GOLD_API_KEY}&base=INR&currencies=XAU`;
@@ -76,12 +76,37 @@ const purityMultipliers = {
   '14K': 0.600, '18K': 0.780, '24K': 1.000
 };
 
-// Updated function to handle multiple diamonds with single quality
+// Helper function to get all diamonds from an item
+export const getAllDiamondsFromItem = (item: any): { diamonds: Diamond[], quality: DiamondQuality | null } => {
+  const allDiamonds: Diamond[] = [];
+  let quality: DiamondQuality | null = null;
+
+  if (item.diamonds_lab_grown && item.diamonds_lab_grown.length > 0) {
+    allDiamonds.push(...item.diamonds_lab_grown);
+    quality = 'Lab Grown';
+  }
+  if (item.diamonds_gh_vs_si && item.diamonds_gh_vs_si.length > 0) {
+    allDiamonds.push(...item.diamonds_gh_vs_si);
+    quality = quality ? null : 'GH/VS-SI'; // Mixed qualities
+  }
+  if (item.diamonds_fg_vvs_si && item.diamonds_fg_vvs_si.length > 0) {
+    allDiamonds.push(...item.diamonds_fg_vvs_si);
+    quality = quality ? null : 'FG/VVS-SI';
+  }
+  if (item.diamonds_ef_vvs && item.diamonds_ef_vvs.length > 0) {
+    allDiamonds.push(...item.diamonds_ef_vvs);
+    quality = quality ? null : 'EF/VVS';
+  }
+
+  return { diamonds: allDiamonds, quality };
+};
+
+// Updated function to handle multiple diamond qualities
 export const calculateJewelleryPriceSync = (
   basePrice: number,
   goldWeight: number,
   goldQuality: string,
-  diamonds: Diamond[],
+  diamondsData: { diamonds: Diamond[], quality: DiamondQuality | null },
   makingChargesPerGram: number,
   goldPricePerGram: number,
   gstRate: number = 0.18
@@ -89,8 +114,8 @@ export const calculateJewelleryPriceSync = (
   const purity = purityMultipliers[goldQuality as keyof typeof purityMultipliers] || 0.583;
   const goldValue = goldWeight * goldPricePerGram * purity;
   
-  // Calculate total diamond cost from multiple diamonds
-  const totalDiamondCost = diamonds.reduce((total, diamond) => {
+  // Calculate total diamond cost from all diamonds
+  const totalDiamondCost = diamondsData.diamonds.reduce((total, diamond) => {
     return total + (diamond.carat * diamond.cost_per_carat);
   }, 0);
   
@@ -114,7 +139,7 @@ export const getPriceBreakdown = (
   basePrice: number,
   goldWeight: number,
   goldQuality: string,
-  diamonds: Diamond[],
+  diamondsData: { diamonds: Diamond[], quality: DiamondQuality | null },
   makingChargesPerGram: number,
   goldPricePerGram: number,
   gstRate: number = 0.18
@@ -123,7 +148,7 @@ export const getPriceBreakdown = (
   const goldValue = goldWeight * goldPricePerGram * purity;
   
   // Calculate total diamond cost and breakdown
-  const totalDiamondCost = diamonds.reduce((total, diamond) => {
+  const totalDiamondCost = diamondsData.diamonds.reduce((total, diamond) => {
     return total + (diamond.carat * diamond.cost_per_carat);
   }, 0);
   
@@ -139,7 +164,7 @@ export const getPriceBreakdown = (
     subtotal, 
     gst, 
     total: subtotal + gst,
-    diamonds // Include individual diamond breakdown
+    diamonds: diamondsData.diamonds
   };
 };
 
@@ -148,13 +173,24 @@ export const getTotalDiamondWeight = (diamonds: Diamond[]): number => {
   return diamonds.reduce((total, diamond) => total + diamond.carat, 0);
 };
 
-// Helper function to format diamond summary with single quality
-export const formatDiamondSummary = (diamonds: Diamond[], diamondQuality?: string): string => {
+// Helper function to format diamond summary
+export const formatDiamondSummary = (diamonds: Diamond[], quality?: DiamondQuality | null): string => {
   if (diamonds.length === 0) return 'No diamonds';
   if (diamonds.length === 1) {
     const diamond = diamonds[0];
-    return `${diamond.carat}ct ${diamondQuality || ''}`.trim();
+    return `${diamond.carat}ct ${quality || ''}`.trim();
   }
   const totalCarats = getTotalDiamondWeight(diamonds);
-  return `${totalCarats}ct (${diamonds.length} stones) ${diamondQuality || ''}`.trim();
+  return `${totalCarats.toFixed(2)}ct (${diamonds.length} stones) ${quality || ''}`.trim();
+};
+
+// Helper function to get diamond quality display name
+export const getDiamondQualityDisplayName = (quality: DiamondQuality): string => {
+  const qualityMap: Record<DiamondQuality, string> = {
+    'Lab Grown': 'Lab Grown',
+    'GH/VS-SI': 'GH/VS-SI',
+    'FG/VVS-SI': 'FG/VVS-SI',
+    'EF/VVS': 'EF/VVS'
+  };
+  return qualityMap[quality] || quality;
 };

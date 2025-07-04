@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { JewelleryItem, Category, Diamond } from '../../lib/supabase';
+import { JewelleryItem, Category, Diamond, DiamondQuality } from '../../lib/supabase';
 import { Save, X, Loader } from 'lucide-react';
 import { GoogleDriveUploadService } from '../../lib/googleDriveUpload';
 import { JewelleryDetailsSection } from './jewellery-form/JewelleryDetailsSection';
 import { JewelleryImagesSection } from './jewellery-form/JewelleryImagesSection';
 import { GoldSpecificationsSection } from './jewellery-form/GoldSpecificationsSection';
-import { DiamondsSection } from './jewellery-form/DiamondsSection';
+import { NewDiamondsSection } from './jewellery-form/NewDiamondsSection';
 import { PricePreviewSection } from './jewellery-form/PricePreviewSection';
 import { ImagePreviewModal } from './jewellery-form/ImagePreviewModal';
 import { formatCurrency } from '../../lib/goldPrice';
@@ -29,9 +29,6 @@ export function JewelleryForm({
 }: JewelleryFormProps) {
   const [uploading, setUploading] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  
-  // Initialize diamonds from editing item or create empty array
-  const initialDiamonds: Diamond[] = editingItem?.diamonds || [];
 
   const [formData, setFormData] = useState({
     name: editingItem?.name || '', 
@@ -41,10 +38,16 @@ export function JewelleryForm({
     gold_quality: editingItem?.gold_quality || '14K', 
     making_charges_per_gram: editingItem?.making_charges_per_gram || 500, 
     base_price: editingItem?.base_price || 0,
-    diamond_quality: editingItem?.diamond_quality || '',
   });
 
-  const [diamonds, setDiamonds] = useState<Diamond[]>(initialDiamonds);
+  // Initialize diamond data from editing item
+  const [diamondQualities, setDiamondQualities] = useState({
+    'Lab Grown': editingItem?.diamonds_lab_grown || [],
+    'GH/VS-SI': editingItem?.diamonds_gh_vs_si || [],
+    'FG/VVS-SI': editingItem?.diamonds_fg_vvs_si || [],
+    'EF/VVS': editingItem?.diamonds_ef_vvs || []
+  });
+
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [currentImages, setCurrentImages] = useState<string[]>(editingItem?.image_url || []);
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
@@ -57,17 +60,18 @@ export function JewelleryForm({
     description += `Gold Quality: ${formData.gold_quality}\n`;
     description += `Making Charges Per Gram: ${formatCurrency(formData.making_charges_per_gram)}/g\n`;
 
-    if (diamonds.length > 0) {
-      description += `Diamond Quality: ${formData.diamond_quality || 'N/A'}\n`;
-      diamonds.forEach((d, index) => {
-        description += `Diamond ${index + 1}: ${d.carat}ct, Cost per Carat: ${formatCurrency(d.cost_per_carat)}, Total cost: ${formatCurrency(d.carat * d.cost_per_carat)}\n`;
-      });
-      const totalCarats = diamonds.reduce((sum, d) => sum + d.carat, 0);
-      const totalDiamondCost = diamonds.reduce((sum, d) => sum + (d.carat * d.cost_per_carat), 0);
-      description += `Diamonds Summary: Total Carats: ${totalCarats.toFixed(2)}ct, Total Diamond Cost: ${formatCurrency(totalDiamondCost)}\n`;
-    } else {
-      description += `Diamonds: No diamonds\n`;
-    }
+    // Add diamond information for each quality
+    Object.entries(diamondQualities).forEach(([quality, diamonds]) => {
+      if (diamonds.length > 0) {
+        description += `${quality} Diamonds:\n`;
+        diamonds.forEach((d, index) => {
+          description += `  Diamond ${index + 1}: ${d.carat}ct, Cost per Carat: ${formatCurrency(d.cost_per_carat)}, Total cost: ${formatCurrency(d.carat * d.cost_per_carat)}\n`;
+        });
+        const totalCarats = diamonds.reduce((sum, d) => sum + d.carat, 0);
+        const totalCost = diamonds.reduce((sum, d) => sum + (d.carat * d.cost_per_carat), 0);
+        description += `  ${quality} Summary: Total Carats: ${totalCarats.toFixed(2)}ct, Total Cost: ${formatCurrency(totalCost)}\n`;
+      }
+    });
 
     description += `Base Price: ${formatCurrency(formData.base_price)}\n`;
     return description;
@@ -123,7 +127,10 @@ export function JewelleryForm({
 
       const itemData = {
         ...formData,
-        diamonds: diamonds.filter(d => d.carat > 0), // Only include diamonds with weight
+        diamonds_lab_grown: diamondQualities['Lab Grown'].filter(d => d.carat > 0),
+        diamonds_gh_vs_si: diamondQualities['GH/VS-SI'].filter(d => d.carat > 0),
+        diamonds_fg_vvs_si: diamondQualities['FG/VVS-SI'].filter(d => d.carat > 0),
+        diamonds_ef_vvs: diamondQualities['EF/VVS'].filter(d => d.carat > 0),
         description: formData.description,
       };
 
@@ -173,11 +180,9 @@ export function JewelleryForm({
               uploading={uploading}
             />
 
-            <DiamondsSection
-              diamonds={diamonds}
-              setDiamonds={setDiamonds}
-              diamondQuality={formData.diamond_quality}
-              setDiamondQuality={(quality) => setFormData({ ...formData, diamond_quality: quality })}
+            <NewDiamondsSection
+              diamondQualities={diamondQualities}
+              setDiamondQualities={setDiamondQualities}
               uploading={uploading}
             />
 
@@ -200,7 +205,7 @@ export function JewelleryForm({
 
             <PricePreviewSection
               formData={formData}
-              diamonds={diamonds}
+              diamondQualities={diamondQualities}
               goldPrice={goldPrice}
               gstRate={gstRate}
             />

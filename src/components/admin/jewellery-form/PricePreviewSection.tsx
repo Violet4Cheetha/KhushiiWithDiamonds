@@ -1,5 +1,5 @@
 import React from 'react';
-import { Diamond } from '../../../lib/supabase';
+import { Diamond, DiamondQuality } from '../../../lib/supabase';
 import { formatCurrency, calculateJewelleryPriceSync, getTotalDiamondWeight } from '../../../lib/goldPrice';
 
 interface PricePreviewSectionProps {
@@ -9,18 +9,20 @@ interface PricePreviewSectionProps {
     gold_quality: string;
     making_charges_per_gram: number;
   };
-  diamonds: Diamond[];
+  diamondQualities: Record<DiamondQuality, Diamond[]>;
   goldPrice: number;
   gstRate: number;
 }
 
 export function PricePreviewSection({ 
   formData, 
-  diamonds, 
+  diamondQualities, 
   goldPrice, 
   gstRate 
 }: PricePreviewSectionProps) {
-  const totalDiamondWeight = getTotalDiamondWeight(diamonds);
+  // Combine all diamonds for price calculation
+  const allDiamonds = Object.values(diamondQualities).flat();
+  const totalDiamondWeight = getTotalDiamondWeight(allDiamonds);
   
   const shouldShowPreview = formData.gold_weight > 0 || formData.base_price > 0 || totalDiamondWeight > 0;
   
@@ -28,11 +30,12 @@ export function PricePreviewSection({
     return null;
   }
 
+  const diamondsData = { diamonds: allDiamonds, quality: null };
   const finalPrice = calculateJewelleryPriceSync(
     formData.base_price, 
     formData.gold_weight, 
     formData.gold_quality,
-    diamonds, 
+    diamondsData, 
     formData.making_charges_per_gram, 
     goldPrice, 
     gstRate
@@ -49,7 +52,7 @@ export function PricePreviewSection({
       </p>
       {totalDiamondWeight > 0 && (
         <p className="text-xs text-green-600">
-          *Including {diamonds.length} diamond{diamonds.length > 1 ? 's' : ''} ({totalDiamondWeight.toFixed(2)} total carats)
+          *Including {allDiamonds.length} diamond{allDiamonds.length > 1 ? 's' : ''} ({totalDiamondWeight.toFixed(2)} total carats)
         </p>
       )}
     </div>

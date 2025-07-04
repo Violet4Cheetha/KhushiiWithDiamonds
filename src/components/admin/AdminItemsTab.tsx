@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, JewelleryItem, Category } from '../../lib/supabase';
 import { Plus, Edit, Trash2, Image, ChevronRight, Gem } from 'lucide-react';
-import { formatCurrency, calculateJewelleryPriceSync, getTotalDiamondWeight, formatDiamondSummary } from '../../lib/goldPrice';
+import { formatCurrency, calculateJewelleryPriceSync, getTotalDiamondWeight, formatDiamondSummary, getAllDiamondsFromItem } from '../../lib/goldPrice';
 import { JewelleryForm } from './JewelleryForm';
 
 interface AdminItemsTabProps {
@@ -77,12 +77,10 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
   };
 
   const calculateTotalCost = (item: JewelleryItem): number => {
-    // Use diamonds array from the item
-    const diamonds = item.diamonds || [];
-
+    const diamondsData = getAllDiamondsFromItem(item);
     return calculateJewelleryPriceSync(
       item.base_price, item.gold_weight, item.gold_quality,
-      diamonds, item.making_charges_per_gram, goldPrice, gstRate
+      diamondsData, item.making_charges_per_gram, goldPrice, gstRate
     );
   };
 
@@ -127,10 +125,8 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
               {items.map((item) => {
                 const totalCost = calculateTotalCost(item);
                 const categoryDisplay = getCategoryDisplayName(item.category);
-                
-                // Use diamonds array from the item
-                const diamonds = item.diamonds || [];
-                const totalDiamondWeight = getTotalDiamondWeight(diamonds);
+                const diamondsData = getAllDiamondsFromItem(item);
+                const totalDiamondWeight = getTotalDiamondWeight(diamondsData.diamonds);
                 
                 return (
                   <tr key={item.id} className="hover:bg-gray-50">
@@ -170,14 +166,14 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                       <div>Gold: {item.gold_weight}g ({item.gold_quality})</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {diamonds.length > 0 ? (
+                      {diamondsData.diamonds.length > 0 ? (
                         <div className="flex items-center space-x-1">
                           <Gem className="h-4 w-4 text-blue-500" />
                           <div>
-                            <div className="font-medium">{formatDiamondSummary(diamonds, item.diamond_quality)}</div>
-                            {diamonds.length > 1 && (
+                            <div className="font-medium">{formatDiamondSummary(diamondsData.diamonds, diamondsData.quality)}</div>
+                            {diamondsData.diamonds.length > 1 && (
                               <div className="text-xs text-gray-500">
-                                {diamonds.map((d, i) => `${d.carat}ct`).join(', ')}
+                                {diamondsData.diamonds.map((d, i) => `${d.carat}ct`).join(', ')}
                               </div>
                             )}
                           </div>

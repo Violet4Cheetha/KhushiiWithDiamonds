@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { JewelleryItem } from '../lib/supabase';
-import { calculateJewelleryPriceSync, formatCurrency, formatWeight, getPriceBreakdown, getTotalDiamondWeight, formatDiamondSummary } from '../lib/goldPrice';
+import { JewelleryItem, DiamondQuality } from '../lib/supabase';
+import { calculateJewelleryPriceSync, formatCurrency, formatWeight, getPriceBreakdown, getTotalDiamondWeight, formatDiamondSummary, getAllDiamondsFromItem, getDiamondQualityDisplayName } from '../lib/goldPrice';
 import { useGoldPrice } from '../hooks/useGoldPrice';
 import { useAdminSettings } from '../hooks/useAdminSettings';
-import { ChevronLeft, ChevronRight, Gem, X, ZoomIn } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Gem, X, ZoomIn, ChevronDown } from 'lucide-react';
 
 interface JewelleryCardProps {
   item: JewelleryItem;
@@ -15,15 +15,42 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
   const [modalImageIndex, setModalImageIndex] = useState(0);
+  const [selectedDiamondQuality, setSelectedDiamondQuality] = useState<DiamondQuality | null>(null);
+  const [showDiamondDropdown, setShowDiamondDropdown] = useState(false);
   
-  // Use diamonds array from the item
-  const diamonds = item.diamonds || [];
+  // Get all available diamond qualities for this item
+  const availableQualities: DiamondQuality[] = [];
+  if (item.diamonds_lab_grown && item.diamonds_lab_grown.length > 0) availableQualities.push('Lab Grown');
+  if (item.diamonds_gh_vs_si && item.diamonds_gh_vs_si.length > 0) availableQualities.push('GH/VS-SI');
+  if (item.diamonds_fg_vvs_si && item.diamonds_fg_vvs_si.length > 0) availableQualities.push('FG/VVS-SI');
+  if (item.diamonds_ef_vvs && item.diamonds_ef_vvs.length > 0) availableQualities.push('EF/VVS');
+
+  // Get diamonds based on selected quality or default to first available
+  const getSelectedDiamonds = () => {
+    const quality = selectedDiamondQuality || availableQualities[0];
+    if (!quality) return { diamonds: [], quality: null };
+
+    switch (quality) {
+      case 'Lab Grown':
+        return { diamonds: item.diamonds_lab_grown || [], quality };
+      case 'GH/VS-SI':
+        return { diamonds: item.diamonds_gh_vs_si || [], quality };
+      case 'FG/VVS-SI':
+        return { diamonds: item.diamonds_fg_vvs_si || [], quality };
+      case 'EF/VVS':
+        return { diamonds: item.diamonds_ef_vvs || [], quality };
+      default:
+        return { diamonds: [], quality: null };
+    }
+  };
+
+  const diamondsData = getSelectedDiamonds();
 
   const finalPrice = calculateJewelleryPriceSync(
     item.base_price,
     item.gold_weight,
     item.gold_quality,
-    diamonds,
+    diamondsData,
     item.making_charges_per_gram,
     goldPrice,
     gstRate
@@ -33,7 +60,7 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
     item.base_price,
     item.gold_weight,
     item.gold_quality,
-    diamonds,
+    diamondsData,
     item.making_charges_per_gram,
     goldPrice,
     gstRate
@@ -64,7 +91,7 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
     setModalImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
-  const totalDiamondWeight = getTotalDiamondWeight(diamonds);
+  const totalDiamondWeight = getTotalDiamondWeight(diamondsData.diamonds);
 
   return (
     <>
@@ -149,12 +176,53 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
                 <span className="font-medium">{formatWeight(item.gold_weight)}</span>
               </div>
             )}
-            {totalDiamondWeight > 0 && (
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Diamonds:</span>
-                <span className="font-medium">{formatDiamondSummary(diamonds, item.diamond_quality)}</span>
+            
+            {/* Diamond Quality Selection */}
+            {availableQualities.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Diamond Quality:</span>
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowDiamondDropdown(!showDiamondDropdown)}
+                      className="flex items-center space-x-1 text-sm font-medium text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded"
+                    >
+                      <span>{getDiamondQualityDisplayName(diamondsData.quality || availableQualities[0])}</span>
+                      <ChevronDown className="h-3 w-3" />
+                    </button>
+                    
+                    {showDiamondDropdown && (
+                      <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-20 min-w-32">
+                        {availableQualities.map((quality) => (
+                          <button
+                            key={quality}
+                            onClick={() => {
+                              setSelectedDiamondQuality(quality);
+                              setShowDiamondDropdown(false);
+                            }}
+                            className={`block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${
+                              (selectedDiamondQuality || availableQualities[0]) === quality 
+                                ? 'bg-blue-50 text-blue-600' 
+                                : 'text-gray-700'
+                            }`}
+                          >
+                            {getDiamondQualityDisplayName(quality)}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {totalDiamondWeight > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Diamonds:</span>
+                    <span className="font-medium">{formatDiamondSummary(diamondsData.diamonds, diamondsData.quality)}</span>
+                  </div>
+                )}
               </div>
             )}
+            
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Purity:</span>
               <span className="font-medium">{item.gold_quality} Gold</span>
@@ -166,22 +234,16 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
           </div>
 
           {/* Detailed Diamond Information */}
-          {diamonds.length > 0 && (
+          {diamondsData.diamonds.length > 0 && (
             <div className="bg-blue-50 rounded-lg p-3 mb-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-blue-800 flex items-center">
                   <Gem className="h-4 w-4 mr-1" />
-                  Diamond Details
+                  Diamond Details ({getDiamondQualityDisplayName(diamondsData.quality!)})
                 </span>
               </div>
               <div className="space-y-1 text-xs">
-                {item.diamond_quality && (
-                  <div className="flex justify-between mb-1 border-b border-blue-200 pb-1">
-                    <span className="text-blue-600 font-medium">Quality:</span>
-                    <span className="text-blue-700">{item.diamond_quality}</span>
-                  </div>
-                )}
-                {diamonds.map((diamond, index) => (
+                {diamondsData.diamonds.map((diamond, index) => (
                   <div key={index} className="flex justify-between">
                     <span className="text-blue-600">
                       Diamond {index + 1}: {diamond.carat}ct
@@ -191,7 +253,7 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
                     </span>
                   </div>
                 ))}
-                {diamonds.length > 1 && (
+                {diamondsData.diamonds.length > 1 && (
                   <div className="flex justify-between border-t border-blue-200 pt-1 font-medium">
                     <span className="text-blue-700">Total:</span>
                     <span className="text-blue-700">{formatCurrency(breakdown.diamondCost)}</span>
@@ -245,6 +307,14 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
           </div>
         </div>
       </div>
+
+      {/* Dropdown Overlay */}
+      {showDiamondDropdown && (
+        <div
+          className="fixed inset-0 z-10"
+          onClick={() => setShowDiamondDropdown(false)}
+        />
+      )}
 
       {/* Image Modal */}
       {showImageModal && (
