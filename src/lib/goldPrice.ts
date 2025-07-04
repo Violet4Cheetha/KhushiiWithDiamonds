@@ -73,7 +73,7 @@ export const getCurrentGoldPrice = async (overrideLivePrice?: boolean): Promise<
 };
 
 const purityMultipliers = {
-  '10K': 0.417, '14K': 0.600, '18K': 0.780, '22K': 0.917, '24K': 1.000
+  '14K': 0.600, '18K': 0.780, '24K': 1.000
 };
 
 // Updated function to handle multiple diamonds
