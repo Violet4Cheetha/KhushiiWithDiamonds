@@ -139,7 +139,7 @@ export function JewelleryDetailsSection({
             </button>
 
             {showCategoryDropdown && (
-              <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-45 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
                 <div className="py-1">
                   {topLevelCategories.map((category) => (
                     <CategoryMenuItem key={category.id} category={category} />
