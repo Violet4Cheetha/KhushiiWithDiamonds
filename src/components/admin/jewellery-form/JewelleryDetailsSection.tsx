@@ -179,7 +179,7 @@ export function JewelleryDetailsSection({
       {/* Dropdown Overlay */}
       {showCategoryDropdown && (
         <div
-          className="fixed inset-0 z-40"
+          className="fixed inset-0 z-45"
           onClick={() => setShowCategoryDropdown(false)}
         />
       )}
