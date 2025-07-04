@@ -42,7 +42,7 @@ export function GoldSpecificationsSection({
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
             disabled={uploading}
           >
-            {['18K', '22K', '24K', '14K'].map(quality => (
+            {['18K', '24K', '14K'].map(quality => (
               <option key={quality} value={quality}>{quality}</option>
             ))}
           </select>
