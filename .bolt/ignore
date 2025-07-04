@@ -1,6 +1,5 @@
-supabase/migrations/20250629053520_teal_trail.sql
-supabase/migrations/20250629054721_nameless_reef.sql
-supabase/migrations/20250629081147_warm_lab.sql
-supabase/migrations/20250629082237_muddy_dust.sql
-supabase/migrations/20250629112358_morning_mouse.sql
-supabase/migrations/20250630043044_teal_feather.sql
+/home/project/supabase/migrations/20250629053520_teal_trail.sqlsupabase/migrations/20250629054721_nameless_reef.sql
+/home/project/supabase/migrations/20250629081147_warm_lab.sql
+/home/project/supabase/migrations/20250629082237_muddy_dust.sql
+/home/project/supabase/migrations/20250629112358_morning_mouse.sql
+/home/project/supabase/migrations/20250630043044_teal_feather.sql
