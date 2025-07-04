@@ -37,7 +37,7 @@ export function JewelleryForm({
     description: editingItem?.description || '', 
     category: editingItem?.category || '', 
     gold_weight: editingItem?.gold_weight || 0,
-    gold_quality: editingItem?.gold_quality || '22K', 
+    gold_quality: editingItem?.gold_quality || '14K', 
     making_charges_per_gram: editingItem?.making_charges_per_gram || 500, 
     base_price: editingItem?.base_price || 0,
   });
