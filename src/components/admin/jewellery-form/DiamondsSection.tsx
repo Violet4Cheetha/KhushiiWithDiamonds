@@ -6,12 +6,20 @@ import { formatCurrency, getTotalDiamondWeight } from '../../../lib/goldPrice';
 interface DiamondsSectionProps {
   diamonds: Diamond[];
   setDiamonds: (diamonds: Diamond[]) => void;
+  diamondQuality: string;
+  setDiamondQuality: (quality: string) => void;
   uploading: boolean;
 }
 
-export function DiamondsSection({ diamonds, setDiamonds, uploading }: DiamondsSectionProps) {
+export function DiamondsSection({ 
+  diamonds, 
+  setDiamonds, 
+  diamondQuality, 
+  setDiamondQuality, 
+  uploading 
+}: DiamondsSectionProps) {
   const addDiamond = () => {
-    setDiamonds([...diamonds, { carat: 0, quality: '', cost_per_carat: 25000 }]);
+    setDiamonds([...diamonds, { carat: 0, cost_per_carat: 25000 }]);
   };
 
   const updateDiamond = (index: number, field: keyof Diamond, value: string | number) => {
@@ -46,6 +54,24 @@ export function DiamondsSection({ diamonds, setDiamonds, uploading }: DiamondsSe
         </button>
       </div>
 
+      {/* Single Diamond Quality Input */}
+      {diamonds.length > 0 && (
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-blue-800 mb-2">Diamond Quality (applies to all diamonds)</label>
+          <input
+            type="text"
+            value={diamondQuality}
+            onChange={(e) => setDiamondQuality(e.target.value)}
+            className="w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-white"
+            placeholder="VS1, VVS, SI1, etc."
+            disabled={uploading}
+          />
+          <p className="text-xs text-blue-600 mt-1">
+            This quality will apply to all diamonds in this jewellery item
+          </p>
+        </div>
+      )}
+
       {diamonds.length === 0 ? (
         <div className="text-center py-4 text-gray-500">
           <Gem className="h-8 w-8 mx-auto mb-2 text-gray-400" />
@@ -66,7 +92,7 @@ export function DiamondsSection({ diamonds, setDiamonds, uploading }: DiamondsSe
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Carat Weight</label>
                   <input
@@ -76,17 +102,6 @@ export function DiamondsSection({ diamonds, setDiamonds, uploading }: DiamondsSe
                     onChange={(e) => updateDiamond(index, 'carat', parseFloat(e.target.value) || 0)}
                     className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500"
                     placeholder="0.50"
-                    disabled={uploading}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Quality</label>
-                  <input
-                    type="text"
-                    value={diamond.quality}
-                    onChange={(e) => updateDiamond(index, 'quality', e.target.value)}
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500"
-                    placeholder="VS1, VVS, SI1"
                     disabled={uploading}
                   />
                 </div>
@@ -120,6 +135,12 @@ export function DiamondsSection({ diamonds, setDiamonds, uploading }: DiamondsSe
                 <span className="font-medium text-blue-800">Total Diamond Cost:</span>
                 <span className="text-blue-700">{formatCurrency(totalDiamondCost)}</span>
               </div>
+              {diamondQuality && (
+                <div className="flex justify-between text-sm">
+                  <span className="font-medium text-blue-800">Diamond Quality:</span>
+                  <span className="text-blue-700">{diamondQuality}</span>
+                </div>
+              )}
             </div>
           )}
         </div>

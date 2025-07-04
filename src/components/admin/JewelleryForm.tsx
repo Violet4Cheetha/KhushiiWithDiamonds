@@ -8,6 +8,7 @@ import { GoldSpecificationsSection } from './jewellery-form/GoldSpecificationsSe
 import { DiamondsSection } from './jewellery-form/DiamondsSection';
 import { PricePreviewSection } from './jewellery-form/PricePreviewSection';
 import { ImagePreviewModal } from './jewellery-form/ImagePreviewModal';
+import { formatCurrency } from '../../lib/goldPrice';
 
 interface JewelleryFormProps {
   categories: Category[];
@@ -40,6 +41,7 @@ export function JewelleryForm({
     gold_quality: editingItem?.gold_quality || '14K', 
     making_charges_per_gram: editingItem?.making_charges_per_gram || 500, 
     base_price: editingItem?.base_price || 0,
+    diamond_quality: editingItem?.diamond_quality || '',
   });
 
   const [diamonds, setDiamonds] = useState<Diamond[]>(initialDiamonds);
@@ -53,20 +55,21 @@ export function JewelleryForm({
     description += `Description: ${formData.description || 'N/A'}\n`;
     description += `Gold Weight: ${formData.gold_weight}g\n`;
     description += `Gold Quality: ${formData.gold_quality}\n`;
-    description += `Making Charges Per Gram: ₹${formData.making_charges_per_gram}/g\n`;
+    description += `Making Charges Per Gram: ${formatCurrency(formData.making_charges_per_gram)}/g\n`;
 
     if (diamonds.length > 0) {
+      description += `Diamond Quality: ${formData.diamond_quality || 'N/A'}\n`;
       diamonds.forEach((d, index) => {
-        description += `Diamond ${index + 1}: ${d.carat}ct, Quality: ${d.quality || 'N/A'}, Cost per Carat: ₹${d.cost_per_carat}, Total cost: ₹${(d.carat * d.cost_per_carat).toFixed(2)}\n`;
+        description += `Diamond ${index + 1}: ${d.carat}ct, Cost per Carat: ${formatCurrency(d.cost_per_carat)}, Total cost: ${formatCurrency(d.carat * d.cost_per_carat)}\n`;
       });
       const totalCarats = diamonds.reduce((sum, d) => sum + d.carat, 0);
       const totalDiamondCost = diamonds.reduce((sum, d) => sum + (d.carat * d.cost_per_carat), 0);
-      description += `Diamonds Summary: Total Carats: ${totalCarats.toFixed(2)}ct, Total Diamond Cost: ₹${totalDiamondCost.toFixed(2)}\n`;
+      description += `Diamonds Summary: Total Carats: ${totalCarats.toFixed(2)}ct, Total Diamond Cost: ${formatCurrency(totalDiamondCost)}\n`;
     } else {
       description += `Diamonds: No diamonds\n`;
     }
 
-    description += `Base Price: ₹${formData.base_price}\n`;
+    description += `Base Price: ${formatCurrency(formData.base_price)}\n`;
     return description;
   };
 
@@ -173,6 +176,8 @@ export function JewelleryForm({
             <DiamondsSection
               diamonds={diamonds}
               setDiamonds={setDiamonds}
+              diamondQuality={formData.diamond_quality}
+              setDiamondQuality={(quality) => setFormData({ ...formData, diamond_quality: quality })}
               uploading={uploading}
             />
 

@@ -76,7 +76,7 @@ const purityMultipliers = {
   '14K': 0.600, '18K': 0.780, '24K': 1.000
 };
 
-// Updated function to handle multiple diamonds
+// Updated function to handle multiple diamonds with single quality
 export const calculateJewelleryPriceSync = (
   basePrice: number,
   goldWeight: number,
@@ -148,13 +148,13 @@ export const getTotalDiamondWeight = (diamonds: Diamond[]): number => {
   return diamonds.reduce((total, diamond) => total + diamond.carat, 0);
 };
 
-// Helper function to format diamond summary
-export const formatDiamondSummary = (diamonds: Diamond[]): string => {
+// Helper function to format diamond summary with single quality
+export const formatDiamondSummary = (diamonds: Diamond[], diamondQuality?: string): string => {
   if (diamonds.length === 0) return 'No diamonds';
   if (diamonds.length === 1) {
     const diamond = diamonds[0];
-    return `${diamond.carat}ct ${diamond.quality}`.trim();
+    return `${diamond.carat}ct ${diamondQuality || ''}`.trim();
   }
   const totalCarats = getTotalDiamondWeight(diamonds);
-  return `${totalCarats}ct (${diamonds.length} stones)`;
+  return `${totalCarats}ct (${diamonds.length} stones) ${diamondQuality || ''}`.trim();
 };

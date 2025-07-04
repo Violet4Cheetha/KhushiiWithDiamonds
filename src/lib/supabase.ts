@@ -26,7 +26,6 @@ supabase.from('categories').select('count', { count: 'exact', head: true })
 
 export type Diamond = {
   carat: number;
-  quality: string;
   cost_per_carat: number;
 };
 
@@ -39,6 +38,7 @@ export type JewelleryItem = {
   gold_weight: number;
   gold_quality: string;
   diamonds: Diamond[];
+  diamond_quality: string;
   making_charges_per_gram: number;
   base_price: number;
   created_at: string;

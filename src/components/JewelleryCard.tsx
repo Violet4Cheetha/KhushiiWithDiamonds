@@ -152,7 +152,7 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
             {totalDiamondWeight > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Diamonds:</span>
-                <span className="font-medium">{formatDiamondSummary(diamonds)}</span>
+                <span className="font-medium">{formatDiamondSummary(diamonds, item.diamond_quality)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm">
@@ -175,10 +175,16 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
                 </span>
               </div>
               <div className="space-y-1 text-xs">
+                {item.diamond_quality && (
+                  <div className="flex justify-between mb-1 border-b border-blue-200 pb-1">
+                    <span className="text-blue-600 font-medium">Quality:</span>
+                    <span className="text-blue-700">{item.diamond_quality}</span>
+                  </div>
+                )}
                 {diamonds.map((diamond, index) => (
                   <div key={index} className="flex justify-between">
                     <span className="text-blue-600">
-                      Diamond {index + 1}: {diamond.carat}ct {diamond.quality}
+                      Diamond {index + 1}: {diamond.carat}ct
                     </span>
                     <span className="text-blue-700">
                       {formatCurrency(diamond.carat * diamond.cost_per_carat)}

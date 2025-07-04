@@ -174,7 +174,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                         <div className="flex items-center space-x-1">
                           <Gem className="h-4 w-4 text-blue-500" />
                           <div>
-                            <div className="font-medium">{formatDiamondSummary(diamonds)}</div>
+                            <div className="font-medium">{formatDiamondSummary(diamonds, item.diamond_quality)}</div>
                             {diamonds.length > 1 && (
                               <div className="text-xs text-gray-500">
                                 {diamonds.map((d, i) => `${d.carat}ct`).join(', ')}
