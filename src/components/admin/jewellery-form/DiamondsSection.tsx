@@ -1,6 +1,6 @@
 import React from 'react';
 import { Diamond } from '../../../lib/supabase';
-import { Gem, Plus, Trash2 } from 'lucide-react';
+import { Gem, Plus, Trash2, ChevronDown } from 'lucide-react';
 import { formatCurrency, getTotalDiamondWeight } from '../../../lib/goldPrice';
 
 interface DiamondsSectionProps {
@@ -10,6 +10,14 @@ interface DiamondsSectionProps {
   setDiamondQuality: (quality: string) => void;
   uploading: boolean;
 }
+
+const DIAMOND_QUALITY_OPTIONS = [
+  { value: '', label: 'Select Diamond Quality' },
+  { value: 'Lab Grown', label: 'Lab Grown' },
+  { value: 'GH/VS-SI', label: 'GH/VS-SI' },
+  { value: 'FG/VVS-SI', label: 'FG/VVS-SI' },
+  { value: 'EF/VVS', label: 'EF/VVS' }
+];
 
 export function DiamondsSection({ 
   diamonds, 
@@ -54,18 +62,25 @@ export function DiamondsSection({
         </button>
       </div>
 
-      {/* Single Diamond Quality Input */}
+      {/* Single Diamond Quality Dropdown */}
       {diamonds.length > 0 && (
         <div className="mb-4">
           <label className="block text-sm font-medium text-blue-800 mb-2">Diamond Quality (applies to all diamonds)</label>
-          <input
-            type="text"
-            value={diamondQuality}
-            onChange={(e) => setDiamondQuality(e.target.value)}
-            className="w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-white"
-            placeholder="VS1, VVS, SI1, etc."
-            disabled={uploading}
-          />
+          <div className="relative">
+            <select
+              value={diamondQuality}
+              onChange={(e) => setDiamondQuality(e.target.value)}
+              className="w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-white appearance-none pr-10"
+              disabled={uploading}
+            >
+              {DIAMOND_QUALITY_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          </div>
           <p className="text-xs text-blue-600 mt-1">
             This quality will apply to all diamonds in this jewellery item
           </p>
