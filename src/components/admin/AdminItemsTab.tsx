@@ -190,7 +190,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
       </div>
 
       <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-        <div className="overflow-x-auto relative z-0">
+        <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
