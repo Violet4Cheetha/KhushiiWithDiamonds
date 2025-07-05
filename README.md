@@ -84,6 +84,7 @@
 6. In "Configure project and deploy tab"
   - Enter project name
   - Add Enviromental Variables
+
   |Key|Value|
   |---|---|
   |VITE_SUPABASE_DATABASE_URL|{your supabase url}|
@@ -110,14 +111,16 @@ OR instead of adding Supabase Environmental Variable you can integrate youre Sup
 Go to Files>FTP Account
 
 6. Record
-|Name|Given Formate|Desired Format|Notes|
+7. 
+| Name | Given Formate | Desired Format | Notes |
 |---|---|---|---|
-|FTP IP(Hostname)|"ftp://XX.XXX.XXX.XXX"|"XX.XXX.XXX.XXX"|Remove "ftp://"|
+| FTP IP(Hostname) | "ftp://XX.XXX.XXX.XXX" | "XX.XXX.XXX.XXX" | Remove "ftp://" |
 |FTP username|"uXXXXXXXXX.{your_domain}"|"uXXXXXXXXX"|Remove "{your_domain}"|
 |FTP password|{your_password}|{your_password}|Use "Change FTP Password" if you don't know|
 
 7. In your Github repo add given Repository secrets in 
   Setting>Security>Secrets and variables>Actions>
+
   |Name|Secret|
   |---|---|
   |FTP_HOST|{FTP IP}|
@@ -127,10 +130,10 @@ Go to Files>FTP Account
   |VITE_SUPABASE_DATABASE_URL|{your supabase url}|
   |VITE_GOLD_API_KEY|{your metalpriceapi key}|
 
-8. Now build and deploy the website by 
+9. Now build and deploy the website by 
   Action>Deploy to Hostinger via FTP>"Open most recent workflow run">Re-run all jobs
   (See if all the steps are sucessfully perfomed in Summary>build-and-deploy)
-9. *If even after a sucessful "build-and-deploy" the website doesn't work then delet "public_html" folder in Hostinger>Website>Dashboard>Files>File Manager>Access files of {your domain name} and re-run the workflow.
+10. *If even after a sucessful "build-and-deploy" the website doesn't work then delet "public_html" folder in Hostinger>Website>Dashboard>Files>File Manager>Access files of {your domain name} and re-run the workflow.
 
 ### Installation (To run locally)
 
