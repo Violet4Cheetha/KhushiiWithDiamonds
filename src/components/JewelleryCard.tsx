@@ -192,7 +192,7 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
                     </button>
                     
                     {showDiamondDropdown && (
-                      <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-100 min-w-32">
+                      <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 min-w-32">
                         {availableQualities.map((quality) => (
                           <button
                             key={quality}
