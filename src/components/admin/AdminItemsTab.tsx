@@ -77,6 +77,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
   };
 
   const calculateTotalCost = (item: JewelleryItem): number => {
+    // Use the first available diamond quality for price calculation in admin view
     const diamondsData = getAllDiamondsFromItem(item);
     return calculateJewelleryPriceSync(
       item.base_price, item.gold_weight, item.gold_quality,
@@ -94,6 +95,38 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
       return parent ? `${parent.name} → ${categoryName}` : categoryName;
     }
     return categoryName;
+  };
+
+  // Get diamond summary for admin display
+  const getDiamondSummary = (item: JewelleryItem) => {
+    const qualities = [];
+    if (item.diamonds_lab_grown?.length > 0) qualities.push('Lab Grown');
+    if (item.diamonds_gh_vs_si?.length > 0) qualities.push('GH/VS-SI');
+    if (item.diamonds_fg_vvs_si?.length > 0) qualities.push('FG/VVS-SI');
+    if (item.diamonds_ef_vvs?.length > 0) qualities.push('EF/VVS');
+
+    if (qualities.length === 0) return 'No diamonds';
+
+    // Use first available quality for display
+    const firstQuality = qualities[0];
+    let diamonds = [];
+    switch (firstQuality) {
+      case 'Lab Grown':
+        diamonds = item.diamonds_lab_grown || [];
+        break;
+      case 'GH/VS-SI':
+        diamonds = item.diamonds_gh_vs_si || [];
+        break;
+      case 'FG/VVS-SI':
+        diamonds = item.diamonds_fg_vvs_si || [];
+        break;
+      case 'EF/VVS':
+        diamonds = item.diamonds_ef_vvs || [];
+        break;
+    }
+
+    const totalWeight = getTotalDiamondWeight(diamonds);
+    return `${totalWeight.toFixed(2)}ct (${qualities.length} qualities)`;
   };
 
   return (
@@ -125,8 +158,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
               {items.map((item) => {
                 const totalCost = calculateTotalCost(item);
                 const categoryDisplay = getCategoryDisplayName(item.category);
-                const diamondsData = getAllDiamondsFromItem(item);
-                const totalDiamondWeight = getTotalDiamondWeight(diamondsData.diamonds);
+                const diamondSummary = getDiamondSummary(item);
                 
                 return (
                   <tr key={item.id} className="hover:bg-gray-50">
@@ -166,16 +198,11 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                       <div>Gold: {item.gold_weight}g ({item.gold_quality})</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {diamondsData.diamonds.length > 0 ? (
+                      {diamondSummary !== 'No diamonds' ? (
                         <div className="flex items-center space-x-1">
                           <Gem className="h-4 w-4 text-blue-500" />
                           <div>
-                            <div className="font-medium">{formatDiamondSummary(diamondsData.diamonds, diamondsData.quality)}</div>
-                            {diamondsData.diamonds.length > 1 && (
-                              <div className="text-xs text-gray-500">
-                                {diamondsData.diamonds.map((d, i) => `${d.carat}ct`).join(', ')}
-                              </div>
-                            )}
+                            <div className="font-medium">{diamondSummary}</div>
                           </div>
                         </div>
                       ) : (

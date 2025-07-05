@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { JewelleryItem, Category, Diamond, DiamondQuality } from '../../lib/supabase';
+import { JewelleryItem, Category, DiamondSlot, DiamondQuality } from '../../lib/supabase';
 import { Save, X, Loader } from 'lucide-react';
 import { GoogleDriveUploadService } from '../../lib/googleDriveUpload';
 import { JewelleryDetailsSection } from './jewellery-form/JewelleryDetailsSection';
 import { JewelleryImagesSection } from './jewellery-form/JewelleryImagesSection';
 import { GoldSpecificationsSection } from './jewellery-form/GoldSpecificationsSection';
-import { NewDiamondsSection } from './jewellery-form/NewDiamondsSection';
+import { DiamondSlotsSection } from './jewellery-form/DiamondSlotsSection';
 import { PricePreviewSection } from './jewellery-form/PricePreviewSection';
 import { ImagePreviewModal } from './jewellery-form/ImagePreviewModal';
 import { formatCurrency } from '../../lib/goldPrice';
@@ -18,6 +18,8 @@ interface JewelleryFormProps {
   onSubmit: (itemData: any, imageUrls: string[]) => Promise<void>;
   onCancel: () => void;
 }
+
+const DIAMOND_QUALITY_OPTIONS: DiamondQuality[] = ['Lab Grown', 'GH/VS-SI', 'FG/VVS-SI', 'EF/VVS'];
 
 export function JewelleryForm({ 
   categories, 
@@ -40,14 +42,45 @@ export function JewelleryForm({
     base_price: editingItem?.base_price || 0,
   });
 
-  // Initialize diamond data from editing item
-  const [diamondQualities, setDiamondQualities] = useState({
-    'Lab Grown': editingItem?.diamonds_lab_grown || [],
-    'GH/VS-SI': editingItem?.diamonds_gh_vs_si || [],
-    'FG/VVS-SI': editingItem?.diamonds_fg_vvs_si || [],
-    'EF/VVS': editingItem?.diamonds_ef_vvs || []
-  });
+  // Initialize diamond slots from editing item
+  const initializeDiamondSlots = (): DiamondSlot[] => {
+    if (!editingItem) return [];
 
+    // Get all diamond arrays from the item
+    const diamondArrays = {
+      'Lab Grown': editingItem.diamonds_lab_grown || [],
+      'GH/VS-SI': editingItem.diamonds_gh_vs_si || [],
+      'FG/VVS-SI': editingItem.diamonds_fg_vvs_si || [],
+      'EF/VVS': editingItem.diamonds_ef_vvs || []
+    };
+
+    // Find the quality with diamonds to determine the structure
+    const qualityWithDiamonds = DIAMOND_QUALITY_OPTIONS.find(
+      quality => diamondArrays[quality].length > 0
+    );
+
+    if (!qualityWithDiamonds) return [];
+
+    // Use the first quality's diamonds as the template for carat weights
+    const templateDiamonds = diamondArrays[qualityWithDiamonds];
+    
+    return templateDiamonds.map((_, index) => {
+      const slot: DiamondSlot = {
+        carat: templateDiamonds[index]?.carat || 0,
+        costs: {} as Record<DiamondQuality, number>
+      };
+
+      // Fill in costs from each quality array
+      DIAMOND_QUALITY_OPTIONS.forEach(quality => {
+        const diamonds = diamondArrays[quality];
+        slot.costs[quality] = diamonds[index]?.cost_per_carat || 25000;
+      });
+
+      return slot;
+    });
+  };
+
+  const [diamondSlots, setDiamondSlots] = useState<DiamondSlot[]>(initializeDiamondSlots());
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [currentImages, setCurrentImages] = useState<string[]>(editingItem?.image_url || []);
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
@@ -61,20 +94,59 @@ export function JewelleryForm({
     description += `Making Charges Per Gram: ${formatCurrency(formData.making_charges_per_gram)}/g\n`;
 
     // Add diamond information for each quality
-    Object.entries(diamondQualities).forEach(([quality, diamonds]) => {
-      if (diamonds.length > 0) {
+    if (diamondSlots.length > 0) {
+      DIAMOND_QUALITY_OPTIONS.forEach((quality) => {
         description += `${quality} Diamonds:\n`;
-        diamonds.forEach((d, index) => {
-          description += `  Diamond ${index + 1}: ${d.carat}ct, Cost per Carat: ${formatCurrency(d.cost_per_carat)}, Total cost: ${formatCurrency(d.carat * d.cost_per_carat)}\n`;
+        diamondSlots.forEach((slot, index) => {
+          const totalCost = slot.carat * slot.costs[quality];
+          description += `  Diamond ${index + 1}: ${slot.carat}ct, Cost per Carat: ${formatCurrency(slot.costs[quality])}, Total cost: ${formatCurrency(totalCost)}\n`;
         });
-        const totalCarats = diamonds.reduce((sum, d) => sum + d.carat, 0);
-        const totalCost = diamonds.reduce((sum, d) => sum + (d.carat * d.cost_per_carat), 0);
+        const totalCarats = diamondSlots.reduce((sum, slot) => sum + slot.carat, 0);
+        const totalCost = diamondSlots.reduce((sum, slot) => sum + (slot.carat * slot.costs[quality]), 0);
         description += `  ${quality} Summary: Total Carats: ${totalCarats.toFixed(2)}ct, Total Cost: ${formatCurrency(totalCost)}\n`;
-      }
-    });
+      });
+    }
 
     description += `Base Price: ${formatCurrency(formData.base_price)}\n`;
     return description;
+  };
+
+  // Convert diamond slots to the four separate arrays
+  const convertSlotsToQualityArrays = () => {
+    const result = {
+      diamonds_lab_grown: [] as any[],
+      diamonds_gh_vs_si: [] as any[],
+      diamonds_fg_vvs_si: [] as any[],
+      diamonds_ef_vvs: [] as any[]
+    };
+
+    diamondSlots.forEach(slot => {
+      if (slot.carat > 0) {
+        DIAMOND_QUALITY_OPTIONS.forEach(quality => {
+          const diamond = {
+            carat: slot.carat,
+            cost_per_carat: slot.costs[quality]
+          };
+
+          switch (quality) {
+            case 'Lab Grown':
+              result.diamonds_lab_grown.push(diamond);
+              break;
+            case 'GH/VS-SI':
+              result.diamonds_gh_vs_si.push(diamond);
+              break;
+            case 'FG/VVS-SI':
+              result.diamonds_fg_vvs_si.push(diamond);
+              break;
+            case 'EF/VVS':
+              result.diamonds_ef_vvs.push(diamond);
+              break;
+          }
+        });
+      }
+    });
+
+    return result;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -125,12 +197,12 @@ export function JewelleryForm({
       // Combine current images (not marked for deletion) with new uploaded images
       const finalImageUrls = [...currentImages, ...newImageUrls];
 
+      // Convert diamond slots to quality arrays
+      const diamondArrays = convertSlotsToQualityArrays();
+
       const itemData = {
         ...formData,
-        diamonds_lab_grown: diamondQualities['Lab Grown'].filter(d => d.carat > 0),
-        diamonds_gh_vs_si: diamondQualities['GH/VS-SI'].filter(d => d.carat > 0),
-        diamonds_fg_vvs_si: diamondQualities['FG/VVS-SI'].filter(d => d.carat > 0),
-        diamonds_ef_vvs: diamondQualities['EF/VVS'].filter(d => d.carat > 0),
+        ...diamondArrays,
         description: formData.description,
       };
 
@@ -180,9 +252,9 @@ export function JewelleryForm({
               uploading={uploading}
             />
 
-            <NewDiamondsSection
-              diamondQualities={diamondQualities}
-              setDiamondQualities={setDiamondQualities}
+            <DiamondSlotsSection
+              diamondSlots={diamondSlots}
+              setDiamondSlots={setDiamondSlots}
               uploading={uploading}
             />
 
@@ -205,7 +277,7 @@ export function JewelleryForm({
 
             <PricePreviewSection
               formData={formData}
-              diamondQualities={diamondQualities}
+              diamondSlots={diamondSlots}
               goldPrice={goldPrice}
               gstRate={gstRate}
             />

@@ -31,6 +31,12 @@ export type Diamond = {
 
 export type DiamondQuality = 'Lab Grown' | 'GH/VS-SI' | 'FG/VVS-SI' | 'EF/VVS';
 
+// New type for admin diamond input - represents a single diamond slot with costs for all qualities
+export type DiamondSlot = {
+  carat: number;
+  costs: Record<DiamondQuality, number>;
+};
+
 export type JewelleryItem = {
   id: string;
   name: string;
