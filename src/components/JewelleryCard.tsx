@@ -190,7 +190,14 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
                       <span>{getDiamondQualityDisplayName(diamondsData.quality || availableQualities[0])}</span>
                       <ChevronDown className="h-3 w-3" />
                     </button>
-                    
+                   {/* Dropdown Overlay - Fixed z-index */}
+      {showDiamondDropdown && (
+        <div
+          className="fixed inset-0 z-30"
+          onClick={() => setShowDiamondDropdown(false)}
+        />
+      )}
+ 
                     {showDiamondDropdown && (
                       <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 min-w-32">
                         {availableQualities.map((quality) => (
@@ -308,14 +315,7 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
         </div>
       </div>
 
-      {/* Dropdown Overlay - Fixed z-index */}
-      {showDiamondDropdown && (
-        <div
-          className="fixed inset-0 z-30"
-          onClick={() => setShowDiamondDropdown(false)}
-        />
-      )}
-
+      
       {/* Image Modal */}
       {showImageModal && (
         <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
