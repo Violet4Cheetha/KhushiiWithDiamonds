@@ -264,7 +264,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                           </button>
                           
                           {isDropdownOpen && (
-                            <div className="absolute z-40 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-32">
+                            <div className="absolute z-20 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-32">
                               {availableQualities.map((quality) => (
                                 <button
                                   key={quality}
