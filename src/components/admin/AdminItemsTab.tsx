@@ -190,7 +190,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
       </div>
 
       <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-visible + inner scroll">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -264,11 +264,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                           </button>
                           
                           {isDropdownOpen && (
-                            <div className="absolute z-20 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-32"
-                               style={{
-    top: dropdownButtonRect?.bottom ?? 0,
-    left: dropdownButtonRect?.left ?? 0,
-  }}>
+                            <div className="absolute z-20 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-32">
                               {availableQualities.map((quality) => (
                                 <button
                                   key={quality}
