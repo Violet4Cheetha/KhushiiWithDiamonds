@@ -311,7 +311,7 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
       {/* Dropdown Overlay - Fixed z-index */}
       {showDiamondDropdown && (
         <div
-          className="fixed inset-0 z-40"
+          className="fixed inset-0 z-45"
           onClick={() => setShowDiamondDropdown(false)}
         />
       )}
