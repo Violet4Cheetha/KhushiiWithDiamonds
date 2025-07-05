@@ -85,7 +85,7 @@
   - Enter project name
   - Add Enviromental Variables
   |Key|Value|
-  |-|-|
+  |---|---|
   |VITE_SUPABASE_DATABASE_URL|{your supabase url}|
   |VITE_SUPABASE_ANON_KEY|{your supabase key}|
   |VITE_GOLD_API_KEY|{your metalpriceapi key}|
@@ -111,7 +111,7 @@ Go to Files>FTP Account
 
 6. Record
 |Name|Given Formate|Desired Format|Notes|
-|-|-|-|-|
+|---|---|---|---|
 |FTP IP(Hostname)|"ftp://XX.XXX.XXX.XXX"|"XX.XXX.XXX.XXX"|Remove "ftp://"|
 |FTP username|"uXXXXXXXXX.{your_domain}"|"uXXXXXXXXX"|Remove "{your_domain}"|
 |FTP password|{your_password}|{your_password}|Use "Change FTP Password" if you don't know|
@@ -119,7 +119,7 @@ Go to Files>FTP Account
 7. In your Github repo add given Repository secrets in 
   Setting>Security>Secrets and variables>Actions>
   |Name|Secret|
-  |-|-|
+  |---|---|
   |FTP_HOST|{FTP IP}|
   |FTP_PASSWORD|{FTP password}|
   |FTP_USERNAME|{FTP username}|
