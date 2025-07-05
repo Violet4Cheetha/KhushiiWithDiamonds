@@ -307,11 +307,6 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                       <div className="text-xs text-gray-500">
                         Including GST & Live Gold
                       </div>
-                      {selectedQuality && (
-                        <div className="text-xs text-blue-600">
-                          {selectedQuality} Quality
-                        </div>
-                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
