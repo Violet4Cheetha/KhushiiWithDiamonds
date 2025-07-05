@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { supabase, JewelleryItem, Category } from '../../lib/supabase';
-import { Plus, Edit, Trash2, Image, ChevronRight, Gem } from 'lucide-react';
+import { supabase, JewelleryItem, Category, DiamondQuality } from '../../lib/supabase';
+import { Plus, Edit, Trash2, Image, ChevronRight, Gem, ChevronDown } from 'lucide-react';
 import { formatCurrency, calculateJewelleryPriceSync, getTotalDiamondWeight, formatDiamondSummary, getAllDiamondsFromItem } from '../../lib/goldPrice';
 import { JewelleryForm } from './JewelleryForm';
 
@@ -10,10 +10,16 @@ interface AdminItemsTabProps {
   gstRate: number;
 }
 
+interface ItemDiamondQuality {
+  [itemId: string]: DiamondQuality;
+}
+
 export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabProps) {
   const [items, setItems] = useState<JewelleryItem[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingItem, setEditingItem] = useState<JewelleryItem | null>(null);
+  const [selectedDiamondQualities, setSelectedDiamondQualities] = useState<ItemDiamondQuality>({});
+  const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadItems();
@@ -26,7 +32,18 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (data) setItems(data);
+      if (data) {
+        setItems(data);
+        // Initialize diamond quality selection for each item
+        const initialQualities: ItemDiamondQuality = {};
+        data.forEach(item => {
+          const availableQualities = getAvailableDiamondQualities(item);
+          if (availableQualities.length > 0) {
+            initialQualities[item.id] = availableQualities[0];
+          }
+        });
+        setSelectedDiamondQualities(initialQualities);
+      }
     } catch (error) {
       console.error('Error loading items:', error);
     }
@@ -76,9 +93,49 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
     }
   };
 
+  // Get available diamond qualities for an item
+  const getAvailableDiamondQualities = (item: JewelleryItem): DiamondQuality[] => {
+    const qualities: DiamondQuality[] = [];
+    if (item.diamonds_lab_grown && item.diamonds_lab_grown.length > 0) qualities.push('Lab Grown');
+    if (item.diamonds_gh_vs_si && item.diamonds_gh_vs_si.length > 0) qualities.push('GH/VS-SI');
+    if (item.diamonds_fg_vvs_si && item.diamonds_fg_vvs_si.length > 0) qualities.push('FG/VVS-SI');
+    if (item.diamonds_ef_vvs && item.diamonds_ef_vvs.length > 0) qualities.push('EF/VVS');
+    return qualities;
+  };
+
+  // Get diamonds for selected quality
+  const getDiamondsForQuality = (item: JewelleryItem, quality: DiamondQuality) => {
+    switch (quality) {
+      case 'Lab Grown':
+        return { diamonds: item.diamonds_lab_grown || [], quality };
+      case 'GH/VS-SI':
+        return { diamonds: item.diamonds_gh_vs_si || [], quality };
+      case 'FG/VVS-SI':
+        return { diamonds: item.diamonds_fg_vvs_si || [], quality };
+      case 'EF/VVS':
+        return { diamonds: item.diamonds_ef_vvs || [], quality };
+      default:
+        return { diamonds: [], quality: null };
+    }
+  };
+
   const calculateTotalCost = (item: JewelleryItem): number => {
-    // Use the first available diamond quality for price calculation in admin view
-    const diamondsData = getAllDiamondsFromItem(item);
+    const selectedQuality = selectedDiamondQualities[item.id];
+    const availableQualities = getAvailableDiamondQualities(item);
+    
+    // Use selected quality or first available quality
+    const qualityToUse = selectedQuality || availableQualities[0];
+    
+    if (!qualityToUse) {
+      // No diamonds, use empty diamonds data
+      const diamondsData = { diamonds: [], quality: null };
+      return calculateJewelleryPriceSync(
+        item.base_price, item.gold_weight, item.gold_quality,
+        diamondsData, item.making_charges_per_gram, goldPrice, gstRate
+      );
+    }
+
+    const diamondsData = getDiamondsForQuality(item, qualityToUse);
     return calculateJewelleryPriceSync(
       item.base_price, item.gold_weight, item.gold_quality,
       diamondsData, item.making_charges_per_gram, goldPrice, gstRate
@@ -97,36 +154,26 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
     return categoryName;
   };
 
-  // Get diamond summary for admin display
-  const getDiamondSummary = (item: JewelleryItem) => {
-    const qualities = [];
-    if (item.diamonds_lab_grown?.length > 0) qualities.push('Lab Grown');
-    if (item.diamonds_gh_vs_si?.length > 0) qualities.push('GH/VS-SI');
-    if (item.diamonds_fg_vvs_si?.length > 0) qualities.push('FG/VVS-SI');
-    if (item.diamonds_ef_vvs?.length > 0) qualities.push('EF/VVS');
-
-    if (qualities.length === 0) return 'No diamonds';
-
-    // Use first available quality for display
-    const firstQuality = qualities[0];
-    let diamonds = [];
-    switch (firstQuality) {
-      case 'Lab Grown':
-        diamonds = item.diamonds_lab_grown || [];
-        break;
-      case 'GH/VS-SI':
-        diamonds = item.diamonds_gh_vs_si || [];
-        break;
-      case 'FG/VVS-SI':
-        diamonds = item.diamonds_fg_vvs_si || [];
-        break;
-      case 'EF/VVS':
-        diamonds = item.diamonds_ef_vvs || [];
-        break;
+  const toggleDropdown = (itemId: string) => {
+    const newOpenDropdowns = new Set(openDropdowns);
+    if (newOpenDropdowns.has(itemId)) {
+      newOpenDropdowns.delete(itemId);
+    } else {
+      newOpenDropdowns.add(itemId);
     }
+    setOpenDropdowns(newOpenDropdowns);
+  };
 
-    const totalWeight = getTotalDiamondWeight(diamonds);
-    return `${totalWeight.toFixed(2)}ct (${qualities.length} qualities)`;
+  const selectDiamondQuality = (itemId: string, quality: DiamondQuality) => {
+    setSelectedDiamondQualities(prev => ({
+      ...prev,
+      [itemId]: quality
+    }));
+    setOpenDropdowns(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(itemId);
+      return newSet;
+    });
   };
 
   return (
@@ -147,7 +194,7 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {['Item', 'Category', 'Images', 'Specifications', 'Diamonds', 'Cost Components (₹)', 'Total Cost (₹)', 'Actions'].map(header => (
+                {['Item', 'Category', 'Images', 'Specifications', 'Diamond Quality', 'Cost Components (₹)', 'Total Cost (₹)', 'Actions'].map(header => (
                   <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {header}
                   </th>
@@ -158,7 +205,14 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
               {items.map((item) => {
                 const totalCost = calculateTotalCost(item);
                 const categoryDisplay = getCategoryDisplayName(item.category);
-                const diamondSummary = getDiamondSummary(item);
+                const availableQualities = getAvailableDiamondQualities(item);
+                const selectedQuality = selectedDiamondQualities[item.id];
+                const isDropdownOpen = openDropdowns.has(item.id);
+                
+                // Get diamond data for selected quality
+                const diamondsData = selectedQuality 
+                  ? getDiamondsForQuality(item, selectedQuality)
+                  : { diamonds: [], quality: null };
                 
                 return (
                   <tr key={item.id} className="hover:bg-gray-50">
@@ -198,12 +252,40 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                       <div>Gold: {item.gold_weight}g ({item.gold_quality})</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {diamondSummary !== 'No diamonds' ? (
-                        <div className="flex items-center space-x-1">
-                          <Gem className="h-4 w-4 text-blue-500" />
-                          <div>
-                            <div className="font-medium">{diamondSummary}</div>
-                          </div>
+                      {availableQualities.length > 0 ? (
+                        <div className="relative">
+                          <button
+                            onClick={() => toggleDropdown(item.id)}
+                            className="flex items-center space-x-1 text-sm bg-blue-50 border border-blue-200 rounded px-2 py-1 hover:bg-blue-100"
+                          >
+                            <Gem className="h-3 w-3 text-blue-500" />
+                            <span className="font-medium">{selectedQuality || availableQualities[0]}</span>
+                            <ChevronDown className="h-3 w-3" />
+                          </button>
+                          
+                          {isDropdownOpen && (
+                            <div className="absolute z-20 mt-1 bg-white border border-gray-200 rounded-md shadow-lg min-w-32">
+                              {availableQualities.map((quality) => (
+                                <button
+                                  key={quality}
+                                  onClick={() => selectDiamondQuality(item.id, quality)}
+                                  className={`block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${
+                                    (selectedQuality || availableQualities[0]) === quality 
+                                      ? 'bg-blue-50 text-blue-600' 
+                                      : 'text-gray-700'
+                                  }`}
+                                >
+                                  {quality}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {diamondsData.diamonds.length > 0 && (
+                            <div className="text-xs text-blue-600 mt-1">
+                              {formatDiamondSummary(diamondsData.diamonds, diamondsData.quality)}
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <span className="text-gray-400">No diamonds</span>
@@ -213,6 +295,9 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                       <div className="space-y-1">
                         <div>Making: {formatCurrency(item.making_charges_per_gram)}/g</div>
                         <div>Base: {formatCurrency(item.base_price)}</div>
+                        {diamondsData.diamonds.length > 0 && (
+                          <div>Diamonds: {formatCurrency(diamondsData.diamonds.reduce((sum, d) => sum + (d.carat * d.cost_per_carat), 0))}</div>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -222,6 +307,11 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
                       <div className="text-xs text-gray-500">
                         Including GST & Live Gold
                       </div>
+                      {selectedQuality && (
+                        <div className="text-xs text-blue-600">
+                          {selectedQuality} Quality
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
@@ -244,6 +334,14 @@ export function AdminItemsTab({ categories, goldPrice, gstRate }: AdminItemsTabP
           </table>
         </div>
       </div>
+
+      {/* Dropdown Overlays */}
+      {openDropdowns.size > 0 && (
+        <div
+          className="fixed inset-0 z-10"
+          onClick={() => setOpenDropdowns(new Set())}
+        />
+      )}
 
       {/* Add/Edit Form Modal */}
       {showAddForm && (
