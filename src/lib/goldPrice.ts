@@ -181,7 +181,7 @@ export const formatDiamondSummary = (diamonds: Diamond[], quality?: DiamondQuali
     return `${diamond.carat}ct ${quality || ''}`.trim();
   }
   const totalCarats = getTotalDiamondWeight(diamonds);
-  return `${totalCarats.toFixed(2)}ct (${diamonds.length} stones) ${quality || ''}`.trim();
+  return `${totalCarats.toFixed(2)}ct (${diamonds.length} stones)`.trim();
 };
 
 // Helper function to get diamond quality display name
