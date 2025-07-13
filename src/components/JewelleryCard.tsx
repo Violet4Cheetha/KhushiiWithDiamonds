@@ -22,7 +22,7 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
   const [showImageModal, setShowImageModal] = useState(false);
   const [modalImageIndex, setModalImageIndex] = useState(0);
   const [selectedDiamondQuality, setSelectedDiamondQuality] = useState<DiamondQuality | null>(null);
-  const [selectedGoldQuality, setSelectedGoldQuality] = useState(item.gold_quality);
+  const [selectedGoldQuality, setSelectedGoldQuality] = useState('14K'); // Default to 14K since it's no longer in database
   const [showDiamondDropdown, setShowDiamondDropdown] = useState(false);
   const [showGoldDropdown, setShowGoldDropdown] = useState(false);
   

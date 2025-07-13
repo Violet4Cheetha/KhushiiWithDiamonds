@@ -44,7 +44,6 @@ export type JewelleryItem = {
   category: string;
   image_url: string[];
   gold_weight: number;
-  gold_quality: string;
   diamonds_lab_grown: Diamond[];
   diamonds_gh_vs_si: Diamond[];
   diamonds_fg_vvs_si: Diamond[];

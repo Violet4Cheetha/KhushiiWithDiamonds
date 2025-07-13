@@ -37,7 +37,6 @@ export function JewelleryForm({
     description: editingItem?.description || '', 
     category: editingItem?.category || '', 
     gold_weight: editingItem?.gold_weight || 0,
-    gold_quality: editingItem?.gold_quality || '14K', 
     making_charges_per_gram: editingItem?.making_charges_per_gram || 500, 
     base_price: editingItem?.base_price || 0,
   });
@@ -90,7 +89,7 @@ export function JewelleryForm({
     let description = `Name: ${formData.name}\n`;
     description += `Description: ${formData.description || 'N/A'}\n`;
     description += `Gold Weight: ${formData.gold_weight}g\n`;
-    description += `Gold Quality: ${formData.gold_quality}\n`;
+    description += `Gold Quality: Customer selectable (14K, 18K, 24K)\n`;
     description += `Making Charges Per Gram: ${formatCurrency(formData.making_charges_per_gram)}/g\n`;
 
     // Add diamond information for each quality

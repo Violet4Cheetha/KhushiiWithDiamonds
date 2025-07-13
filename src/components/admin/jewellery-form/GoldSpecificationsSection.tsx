@@ -3,7 +3,6 @@ import React from 'react';
 interface GoldSpecificationsSectionProps {
   formData: {
     gold_weight: number;
-    gold_quality: string;
     making_charges_per_gram: number;
   };
   setFormData: (data: any) => void;
@@ -51,9 +50,6 @@ export function GoldSpecificationsSection({
         <p className="text-sm text-yellow-800">
           <strong>Note:</strong> Gold quality selection has been moved to the customer interface. 
           Customers can now choose between 14K, 18K, and 24K gold and see live price updates.
-        </p>
-        <p className="text-xs text-yellow-700 mt-1">
-          Current default quality: <strong>{formData.gold_quality}</strong> (customers can change this when viewing the item)
         </p>
       </div>
     </div>
