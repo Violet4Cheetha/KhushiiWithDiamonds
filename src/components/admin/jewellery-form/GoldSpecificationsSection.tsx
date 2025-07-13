@@ -21,7 +21,7 @@ export function GoldSpecificationsSection({
         <div className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
         Gold Specifications
       </h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Gold Weight (grams)</label>
           <input
@@ -35,20 +35,6 @@ export function GoldSpecificationsSection({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Gold Quality</label>
-          <select
-            value={formData.gold_quality}
-            onChange={(e) => setFormData({ ...formData, gold_quality: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500"
-            disabled={uploading}
-          >
-            {['14K', '18K', '24K'].map(quality => (
-              <option key={quality} value={quality}>{quality}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Making Charges per Gram (₹)</label>
           <input
             type="number"
@@ -59,6 +45,16 @@ export function GoldSpecificationsSection({
             disabled={uploading}
           />
         </div>
+      </div>
+      
+      <div className="mt-3 p-3 bg-yellow-100 border border-yellow-300 rounded-md">
+        <p className="text-sm text-yellow-800">
+          <strong>Note:</strong> Gold quality selection has been moved to the customer interface. 
+          Customers can now choose between 14K, 18K, and 24K gold and see live price updates.
+        </p>
+        <p className="text-xs text-yellow-700 mt-1">
+          Current default quality: <strong>{formData.gold_quality}</strong> (customers can change this when viewing the item)
+        </p>
       </div>
     </div>
   );

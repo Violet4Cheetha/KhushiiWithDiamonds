@@ -9,6 +9,12 @@ interface JewelleryCardProps {
   item: JewelleryItem;
 }
 
+const GOLD_QUALITY_OPTIONS = [
+  { value: '14K', label: '14K Gold', purity: 0.583 },
+  { value: '18K', label: '18K Gold', purity: 0.750 },
+  { value: '24K', label: '24K Gold', purity: 1.000 }
+];
+
 export function JewelleryCard({ item }: JewelleryCardProps) {
   const { goldPrice } = useGoldPrice();
   const { gstRate } = useAdminSettings();
@@ -16,7 +22,9 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
   const [showImageModal, setShowImageModal] = useState(false);
   const [modalImageIndex, setModalImageIndex] = useState(0);
   const [selectedDiamondQuality, setSelectedDiamondQuality] = useState<DiamondQuality | null>(null);
+  const [selectedGoldQuality, setSelectedGoldQuality] = useState(item.gold_quality);
   const [showDiamondDropdown, setShowDiamondDropdown] = useState(false);
+  const [showGoldDropdown, setShowGoldDropdown] = useState(false);
   
   // Get all available diamond qualities for this item
   const availableQualities: DiamondQuality[] = [];
@@ -49,7 +57,7 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
   const finalPrice = calculateJewelleryPriceSync(
     item.base_price,
     item.gold_weight,
-    item.gold_quality,
+    selectedGoldQuality, // Use selected gold quality instead of item.gold_quality
     diamondsData,
     item.making_charges_per_gram,
     goldPrice,
@@ -59,7 +67,7 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
   const breakdown = getPriceBreakdown(
     item.base_price,
     item.gold_weight,
-    item.gold_quality,
+    selectedGoldQuality, // Use selected gold quality instead of item.gold_quality
     diamondsData,
     item.making_charges_per_gram,
     goldPrice,
@@ -92,6 +100,11 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
   };
 
   const totalDiamondWeight = getTotalDiamondWeight(diamondsData.diamonds);
+
+  const getGoldQualityDisplayName = (quality: string) => {
+    const option = GOLD_QUALITY_OPTIONS.find(opt => opt.value === quality);
+    return option ? option.label : quality;
+  };
 
   return (
     <>
@@ -177,6 +190,41 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
               </div>
             )}
             
+            {/* Gold Quality Selection */}
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Gold Quality:</span>
+              <div className="relative">
+                <button
+                  onClick={() => setShowGoldDropdown(!showGoldDropdown)}
+                  className="flex items-center space-x-1 text-sm font-medium text-yellow-600 hover:text-yellow-800 bg-yellow-50 px-2 py-1 rounded"
+                >
+                  <span>{getGoldQualityDisplayName(selectedGoldQuality)}</span>
+                  <ChevronDown className="h-3 w-3" />
+                </button>
+                
+                {showGoldDropdown && (
+                  <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 min-w-32">
+                    {GOLD_QUALITY_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          setSelectedGoldQuality(option.value);
+                          setShowGoldDropdown(false);
+                        }}
+                        className={`block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${
+                          selectedGoldQuality === option.value 
+                            ? 'bg-yellow-50 text-yellow-600' 
+                            : 'text-gray-700'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            
             {/* Diamond Quality Selection */}
             {availableQualities.length > 0 && (
               <div className="space-y-2">
@@ -190,14 +238,7 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
                       <span>{getDiamondQualityDisplayName(diamondsData.quality || availableQualities[0])}</span>
                       <ChevronDown className="h-3 w-3" />
                     </button>
-                   {/* Dropdown Overlay - Fixed z-index */}
-      {showDiamondDropdown && (
-        <div
-          className="fixed inset-0 z-30"
-          onClick={() => setShowDiamondDropdown(false)}
-        />
-      )}
- 
+                    
                     {showDiamondDropdown && (
                       <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 min-w-32">
                         {availableQualities.map((quality) => (
@@ -230,10 +271,6 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
               </div>
             )}
             
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Purity:</span>
-              <span className="font-medium">{item.gold_quality} Gold</span>
-            </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Making Charges:</span>
               <span className="font-medium">{formatCurrency(item.making_charges_per_gram)}/gram</span>
@@ -277,7 +314,7 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
             <div className="space-y-1 text-xs">
               {breakdown.goldValue > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Gold Cost:</span>
+                  <span className="text-gray-600">Gold Cost ({selectedGoldQuality}):</span>
                   <span>{formatCurrency(breakdown.goldValue)}</span>
                 </div>
               )}
@@ -315,6 +352,16 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
         </div>
       </div>
 
+      {/* Dropdown Overlays - Fixed z-index */}
+      {(showDiamondDropdown || showGoldDropdown) && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => {
+            setShowDiamondDropdown(false);
+            setShowGoldDropdown(false);
+          }}
+        />
+      )}
       
       {/* Image Modal */}
       {showImageModal && (
