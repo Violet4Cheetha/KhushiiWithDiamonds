@@ -355,7 +355,7 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
       {/* Dropdown Overlays - Fixed z-index */}
       {(showDiamondDropdown || showGoldDropdown) && (
         <div
-          className="fixed inset-0 z-40"
+          className="fixed inset-0 z-30"
           onClick={() => {
             setShowDiamondDropdown(false);
             setShowGoldDropdown(false);
@@ -365,7 +365,7 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
       
       {/* Image Modal */}
       {showImageModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-45 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-60 p-4">
           <div className="relative max-w-6xl max-h-full w-full">
             {/* Close Button */}
             <button
@@ -411,22 +411,22 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
                     <span className="text-gray-300">•</span>
                     <span className="text-sm">
                       {modalImageIndex + 1} of {images.length}
-                    </span>
+                  className="flex items-center space-x-1 text-sm font-medium text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded relative z-40"
                   </>
                 )}
               </div>
             </div>
 
             {/* Thumbnail Navigation */}
-            {images.length > 1 && (
+                  <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 min-w-32">
               <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 flex space-x-2 bg-black bg-opacity-50 p-3 rounded-lg">
                 {images.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setModalImageIndex(index)}
-                    className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                    className={`block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 relative z-50 ${
                       index === modalImageIndex 
-                        ? 'border-white' 
+                        className={`block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 relative z-50 ${
                         : 'border-transparent opacity-60 hover:opacity-80'
                     }`}
                   >
