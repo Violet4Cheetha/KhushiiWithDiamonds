@@ -365,7 +365,7 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
       
       {/* Image Modal */}
       {showImageModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-45 p-4">
           <div className="relative max-w-6xl max-h-full w-full">
             {/* Close Button */}
             <button
