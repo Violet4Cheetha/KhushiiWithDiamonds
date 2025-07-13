@@ -203,7 +203,7 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
                 </button>
                 
                 {showGoldDropdown && (
-                  <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-55 min-w-32">
+                  <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 min-w-32">
                     {GOLD_QUALITY_OPTIONS.map((option) => (
                       <button
                         key={option.value}
