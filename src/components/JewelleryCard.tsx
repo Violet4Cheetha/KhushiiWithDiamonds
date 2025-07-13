@@ -355,7 +355,7 @@ export function JewelleryCard({ item }: JewelleryCardProps) {
       {/* Dropdown Overlays - Fixed z-index */}
       {(showDiamondDropdown || showGoldDropdown) && (
         <div
-          className="fixed inset-0 z-30"
+          className="fixed inset-0 z-50"
           onClick={() => {
             setShowDiamondDropdown(false);
             setShowGoldDropdown(false);
