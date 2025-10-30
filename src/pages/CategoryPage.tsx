@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase, JewelleryItem, Category } from '../lib/supabase';
-import { JewelleryCard } from '../components/JewelleryCard';
+import JewelleryCard from '../components/JewelleryCard';
 import { Search, Filter, Sparkles, ChevronRight, Folder } from 'lucide-react';
 
 export function CategoryPage() {
