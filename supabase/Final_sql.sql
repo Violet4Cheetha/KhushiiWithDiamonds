@@ -14,9 +14,16 @@ CREATE TABLE IF NOT EXISTS categories (
 
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 
-ALTER TABLE categories
-ADD CONSTRAINT IF NOT EXISTS categories_parent_id_fkey
-FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE CASCADE;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'categories_parent_id_fkey'
+  ) THEN
+    ALTER TABLE categories
+    ADD CONSTRAINT categories_parent_id_fkey
+    FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE CASCADE;
+  END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_categories_parent_id ON categories(parent_id);
 
@@ -56,41 +63,41 @@ ALTER TABLE admin_settings ENABLE ROW LEVEL SECURITY;
 -- =======================
 
 -- Categories
-CREATE POLICY IF NOT EXISTS "Categories are publicly readable"
+CREATE POLICY "Categories are publicly readable"
   ON categories FOR SELECT TO public USING (true);
 
-CREATE POLICY IF NOT EXISTS "Only authenticated users can insert categories"
+CREATE POLICY "Only authenticated users can insert categories"
   ON categories FOR INSERT TO authenticated WITH CHECK (true);
 
-CREATE POLICY IF NOT EXISTS "Only authenticated users can update categories"
+CREATE POLICY "Only authenticated users can update categories"
   ON categories FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
 
-CREATE POLICY IF NOT EXISTS "Only authenticated users can delete categories"
+CREATE POLICY "Only authenticated users can delete categories"
   ON categories FOR DELETE TO authenticated USING (true);
 
 -- Jewellery Items
-CREATE POLICY IF NOT EXISTS "Jewellery items are publicly readable"
+CREATE POLICY "Jewellery items are publicly readable"
   ON jewellery_items FOR SELECT TO public USING (true);
 
-CREATE POLICY IF NOT EXISTS "Only authenticated users can insert jewellery items"
+CREATE POLICY "Only authenticated users can insert jewellery items"
   ON jewellery_items FOR INSERT TO authenticated WITH CHECK (true);
 
-CREATE POLICY IF NOT EXISTS "Only authenticated users can update jewellery items"
+CREATE POLICY "Only authenticated users can update jewellery items"
   ON jewellery_items FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
 
-CREATE POLICY IF NOT EXISTS "Only authenticated users can delete jewellery items"
+CREATE POLICY "Only authenticated users can delete jewellery items"
   ON jewellery_items FOR DELETE TO authenticated USING (true);
 
 -- Admin Settings
-CREATE POLICY IF NOT EXISTS "Authenticated users can read admin settings"
+CREATE POLICY "Authenticated users can read admin settings"
   ON admin_settings FOR SELECT TO authenticated USING (true);
 
-CREATE POLICY IF NOT EXISTS "Authenticated users can update admin settings"
+CREATE POLICY "Authenticated users can update admin settings"
   ON admin_settings FOR UPDATE TO authenticated USING (true);
 
-CREATE POLICY IF NOT EXISTS "Authenticated users can insert admin settings"
+CREATE POLICY "Authenticated users can insert admin settings"
   ON admin_settings FOR INSERT TO authenticated WITH CHECK (true);
-
+  
 -- =======================
 -- TRIGGERS & FUNCTIONS
 -- =======================
@@ -103,9 +110,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER IF NOT EXISTS update_admin_settings_timestamp
+DROP TRIGGER IF EXISTS update_admin_settings_timestamp ON admin_settings;
+
+CREATE TRIGGER update_admin_settings_timestamp
   BEFORE UPDATE ON admin_settings
-  FOR EACH ROW EXECUTE FUNCTION update_admin_settings_timestamp();
+  FOR EACH ROW
+  EXECUTE FUNCTION update_admin_settings_timestamp();
 
 -- =======================
 -- DEFAULT DATA
